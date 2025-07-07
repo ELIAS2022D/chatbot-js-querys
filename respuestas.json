@@ -2,5 +2,7 @@
   "pagos": "Tus pagos puedes hacerlo mediante mercado pago o transferencia bancaria.",
   "datos bancarios": "Mercado pago: gaucho.tripoide / transferencia bancaria: 0089722123488145.",
   "hablar con un asesor": "Inmediatamente te pasaremos con un asesor para resolver tu consulta.",
+  "bienvenida": "¡Hola! Bienvenido al canal oficial 😊 ¿En qué podemos ayudarte?",
+  "despedida": "¡Hasta luego! Gracias por contactarnos.",
   "__default": "No entendí tu mensaje, ¿podés repetirlo o escribir 'Hablar con un asesor'?"
 }
