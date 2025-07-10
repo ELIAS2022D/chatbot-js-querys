@@ -46,6 +46,7 @@ client.on('message', async message => {
     }
 }
 
+
     if (texto.includes("hablar con un asesor")) {
         usuariosEnPausa.set(id, ahora);
         if (respuestas["hablar con un asesor"]) {
