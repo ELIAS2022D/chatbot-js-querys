@@ -39,11 +39,12 @@ client.on('message', async message => {
     }
 
     if (!usuariosSaludados.has(id)) {
-        usuariosSaludados.add(id);
-        if (respuestas["bienvenida"]) {
-            await message.reply(respuestas["bienvenida"]);
-        }
+    usuariosSaludados.add(id);
+    if (respuestas["bienvenida"]) {
+        await message.reply(respuestas["bienvenida"]);
+        return; // ← Esto evita que siga y mande el mensaje por defecto
     }
+}
 
     if (texto.includes("hablar con un asesor")) {
         usuariosEnPausa.set(id, ahora);
