@@ -1,8 +1,8 @@
 {
-  "bienvenida": "Hola 👋 soy Wabot, tu asistente virtual. ¿En qué puedo ayudarte?",
-  "ver polizas": "Estas son tus pólizas activas...",
-  "consultar vencimientos": "Aquí están los vencimientos de tus pólizas...",
-  "comprar repuestos": "Podés ver repuestos en www.tusitio.com/repuestos",
-  "hablar con un asesor": "Espera y serás atendido rápidamente por el personal de atención.",
-  "__default": "No entendí tu mensaje 🤖. Por favor escribí una opción válida del menú."
+  "bienvenida": "Hola 👋 Bienvenido al centro técnico. Soy tu asistente virtual, ¿cómo puedo ayudarte hoy?",
+  "reparar notebook": "📍 Para reparar tu notebook, acercala al local o pedinos el servicio a domicilio. Trabajamos con todas las marcas 💻.",
+  "reparar playstation": "🎮 Reparamos todas las versiones de PlayStation (PS3, PS4, PS5). Podés traer tu consola sin turno.",
+  "estado reparacion": "🔎 Para consultar el estado de tu reparación, por favor respondé con tu *número de orden* o comunicate con un técnico.",
+  "hablar con tecnico": "🛠️ Un técnico te va a contactar en breve. El bot quedará pausado durante 1 hora para que podamos ayudarte personalmente.",
+  "__default": "No entendí tu mensaje 🤖. Por favor escribí una opción válida del menú o respondé con el número correspondiente."
 }
