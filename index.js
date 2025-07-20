@@ -5,8 +5,6 @@ const fs = require('fs');
 const respuestas = JSON.parse(fs.readFileSync('./respuestas.json', 'utf8'));
 
 const usuariosSaludados = new Set();
-const usuariosEnPausa = new Map();
-const PAUSA_MS = 60 * 60 * 1000; // 1 hora
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -33,7 +31,7 @@ const enviarMenu = async (message) => {
 3️⃣ Consultar estado de reparación  
 4️⃣ Hablar con un técnico  
 
-✏️ Escribí el número o palabra clave de la opción.
+✏️ Escribí el número o palabra clave de la opción.  
 🧭 Escribí *menu* para volver al menú o *finalizar* para cerrar la conversación.
     `.trim();
 
@@ -43,16 +41,6 @@ const enviarMenu = async (message) => {
 client.on('message', async message => {
     const texto = message.body.toLowerCase();
     const id = message.from;
-    const ahora = Date.now();
-
-    if (usuariosEnPausa.has(id)) {
-        const tiempoPausa = usuariosEnPausa.get(id);
-        if ((ahora - tiempoPausa) < PAUSA_MS) return;
-        else {
-            usuariosEnPausa.delete(id);
-            console.log(`✅ Bot reactivado para: ${id}`);
-        }
-    }
 
     // FINALIZAR
     if (texto === "finalizar") {
@@ -85,9 +73,9 @@ client.on('message', async message => {
         return message.reply(respuestas["estado reparacion"]);
     }
 
-    if (texto === "4" || texto.includes("técnico") || texto.includes("hablar con un técnico")) {
-        usuariosEnPausa.set(id, ahora);
-        return message.reply(respuestas["hablar con tecnico"]);
+    if (texto === "4" || texto.includes("técnico") || texto.includes("hablar con un técnico") || texto.includes("asesor")) {
+        return message.reply(respuestas["hablar con tecnico"] || 
+            "🔧 Para hablar con un técnico hacé clic acá 👉 https://wa.me/5491131433906\n\nMientras tanto, podés volver al *menu* si necesitás otra cosa.");
     }
 
     // RESPUESTAS PERSONALIZADAS
@@ -103,5 +91,3 @@ client.on('message', async message => {
         message.reply(respuestas["__default"]);
     }
 });
-
-client.initialize();
