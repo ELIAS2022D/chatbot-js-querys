@@ -28,24 +28,23 @@ client.on('message', async message => {
     const id = message.from;
     const ahora = Date.now();
 
+    // Pausa si habló con asesor
     if (usuariosEnPausa.has(id)) {
         const tiempoPausa = usuariosEnPausa.get(id);
-        if ((ahora - tiempoPausa) < PAUSA_MS) {
-            return; // Sigue en pausa
-        } else {
-            usuariosEnPausa.delete(id); // Reactivado
-            console.log(`✅ Bot reactivado para: ${id}`);
-        }
+        if ((ahora - tiempoPausa) < PAUSA_MS) return;
+        usuariosEnPausa.delete(id);
+        console.log(`✅ Bot reactivado para: ${id}`);
     }
 
+    // Primer contacto
     if (!usuariosSaludados.has(id)) {
         usuariosSaludados.add(id);
+
         if (respuestas["bienvenida"]) {
             await message.reply(respuestas["bienvenida"]);
         }
 
-        // Enviar menú principal
-        const menu = `
+        await message.reply(`
 📋 *¿Qué necesitás hacer?*
 
 1️⃣ Ver mis pólizas  
@@ -54,13 +53,12 @@ client.on('message', async message => {
 4️⃣ Comprar repuestos  
 
 ✏️ Escribí el número o palabra clave de la opción.
-        `.trim();
+        `.trim());
 
-        await message.reply(menu);
         return;
     }
 
-    // Opciones del menú por número o texto
+    // Menú interactivo (por número o texto)
     if (texto === "1" || texto.includes("póliza")) {
         return message.reply(respuestas["ver polizas"] || "Aquí están tus pólizas.");
     }
@@ -78,14 +76,19 @@ client.on('message', async message => {
         return message.reply(respuestas["comprar repuestos"] || "Podés comprar repuestos en nuestro sitio.");
     }
 
-    // Claves personalizadas desde respuestas.json
+    // Otras respuestas por coincidencia
     for (let clave in respuestas) {
-        if (["bienvenida", "despedida", "__default", "hablar con un asesor", "ver polizas", "consultar vencimientos", "comprar repuestos"].includes(clave)) continue;
+        if (
+            ["bienvenida", "despedida", "__default", "hablar con un asesor", "ver polizas", "consultar vencimientos", "comprar repuestos"]
+                .includes(clave)
+        ) continue;
+
         if (texto.includes(clave.toLowerCase())) {
             return message.reply(respuestas[clave]);
         }
     }
 
+    // Respuesta por defecto
     if (respuestas["__default"]) {
         message.reply(respuestas["__default"]);
     }
