@@ -12,10 +12,10 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-// Muestra el QR en consola y por URL
+// Muestra QR
 client.on('qr', qr => {
     qrcode.generate(qr, { small: true });
-    console.log('\n🔗 También podés escanear este enlace desde otro dispositivo:\n');
+    console.log('\n🔗 Escaneá desde otro dispositivo:\n');
     console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
 });
 
@@ -23,27 +23,9 @@ client.on('ready', () => {
     console.log('🤖 Bot listo para responder mensajes...');
 });
 
-client.on('message', async message => {
-    const texto = message.body.toLowerCase();
-    const id = message.from;
-    const ahora = Date.now();
-
-    if (usuariosEnPausa.has(id)) {
-        const tiempoPausa = usuariosEnPausa.get(id);
-        if ((ahora - tiempoPausa) < PAUSA_MS) {
-            return;
-        } else {
-            usuariosEnPausa.delete(id);
-            console.log(`✅ Bot reactivado para: ${id}`);
-        }
-    }
-
-    if (!usuariosSaludados.has(id)) {
-        usuariosSaludados.add(id);
-
-        await message.reply(respuestas["bienvenida"]);
-
-        const menu = `
+// Función para enviar el menú
+const enviarMenu = async (message) => {
+    const menu = `
 🔧 *¿Qué necesitás hacer?*
 
 1️⃣ Reparar mi notebook  
@@ -52,12 +34,45 @@ client.on('message', async message => {
 4️⃣ Hablar con un técnico  
 
 ✏️ Escribí el número o palabra clave de la opción.
-        `.trim();
+🧭 Escribí *menu* para volver al menú o *finalizar* para cerrar la conversación.
+    `.trim();
 
-        await message.reply(menu);
-        return;
+    await message.reply(menu);
+};
+
+client.on('message', async message => {
+    const texto = message.body.toLowerCase();
+    const id = message.from;
+    const ahora = Date.now();
+
+    if (usuariosEnPausa.has(id)) {
+        const tiempoPausa = usuariosEnPausa.get(id);
+        if ((ahora - tiempoPausa) < PAUSA_MS) return;
+        else {
+            usuariosEnPausa.delete(id);
+            console.log(`✅ Bot reactivado para: ${id}`);
+        }
     }
 
+    // FINALIZAR
+    if (texto === "finalizar") {
+        usuariosSaludados.delete(id);
+        return message.reply("✅ Conversación finalizada. Escribí *hola* o cualquier mensaje para empezar de nuevo.");
+    }
+
+    // VOLVER AL MENÚ
+    if (texto === "menu") {
+        return enviarMenu(message);
+    }
+
+    // PRIMER CONTACTO
+    if (!usuariosSaludados.has(id)) {
+        usuariosSaludados.add(id);
+        await message.reply(respuestas["bienvenida"]);
+        return enviarMenu(message);
+    }
+
+    // OPCIONES DEL MENÚ
     if (texto === "1" || texto.includes("notebook")) {
         return message.reply(respuestas["reparar notebook"]);
     }
@@ -75,6 +90,7 @@ client.on('message', async message => {
         return message.reply(respuestas["hablar con tecnico"]);
     }
 
+    // RESPUESTAS PERSONALIZADAS
     for (let clave in respuestas) {
         if (["bienvenida", "hablar con tecnico", "reparar notebook", "reparar playstation", "estado reparacion", "__default"].includes(clave)) continue;
         if (texto.includes(clave.toLowerCase())) {
@@ -82,6 +98,7 @@ client.on('message', async message => {
         }
     }
 
+    // RESPUESTA POR DEFAULT
     if (respuestas["__default"]) {
         message.reply(respuestas["__default"]);
     }
