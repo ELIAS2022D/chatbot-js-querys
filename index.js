@@ -28,67 +28,60 @@ client.on('message', async message => {
     const id = message.from;
     const ahora = Date.now();
 
-    // Pausa si habló con asesor
     if (usuariosEnPausa.has(id)) {
         const tiempoPausa = usuariosEnPausa.get(id);
-        if ((ahora - tiempoPausa) < PAUSA_MS) return;
-        usuariosEnPausa.delete(id);
-        console.log(`✅ Bot reactivado para: ${id}`);
+        if ((ahora - tiempoPausa) < PAUSA_MS) {
+            return;
+        } else {
+            usuariosEnPausa.delete(id);
+            console.log(`✅ Bot reactivado para: ${id}`);
+        }
     }
 
-    // Primer contacto
     if (!usuariosSaludados.has(id)) {
         usuariosSaludados.add(id);
 
-        if (respuestas["bienvenida"]) {
-            await message.reply(respuestas["bienvenida"]);
-        }
+        await message.reply(respuestas["bienvenida"]);
 
-        await message.reply(`
-📋 *¿Qué necesitás hacer?*
+        const menu = `
+🔧 *¿Qué necesitás hacer?*
 
-1️⃣ Ver mis pólizas  
-2️⃣ Consultar vencimientos  
-3️⃣ Hablar con un asesor  
-4️⃣ Comprar repuestos  
+1️⃣ Reparar mi notebook  
+2️⃣ Arreglar mi PlayStation  
+3️⃣ Consultar estado de reparación  
+4️⃣ Hablar con un técnico  
 
 ✏️ Escribí el número o palabra clave de la opción.
-        `.trim());
+        `.trim();
 
+        await message.reply(menu);
         return;
     }
 
-    // Menú interactivo (por número o texto)
-    if (texto === "1" || texto.includes("póliza")) {
-        return message.reply(respuestas["ver polizas"] || "Aquí están tus pólizas.");
+    if (texto === "1" || texto.includes("notebook")) {
+        return message.reply(respuestas["reparar notebook"]);
     }
 
-    if (texto === "2" || texto.includes("vencimiento")) {
-        return message.reply(respuestas["consultar vencimientos"] || "Tus vencimientos son...");
+    if (texto === "2" || texto.includes("playstation") || texto.includes("ps4") || texto.includes("ps5")) {
+        return message.reply(respuestas["reparar playstation"]);
     }
 
-    if (texto === "3" || texto.includes("asesor")) {
+    if (texto === "3" || texto.includes("estado") || texto.includes("reparación")) {
+        return message.reply(respuestas["estado reparacion"]);
+    }
+
+    if (texto === "4" || texto.includes("técnico") || texto.includes("hablar con un técnico")) {
         usuariosEnPausa.set(id, ahora);
-        return message.reply(respuestas["hablar con un asesor"] || "Te conectamos con un asesor. El bot se pausará por 1 hora.");
+        return message.reply(respuestas["hablar con tecnico"]);
     }
 
-    if (texto === "4" || texto.includes("repuestos")) {
-        return message.reply(respuestas["comprar repuestos"] || "Podés comprar repuestos en nuestro sitio.");
-    }
-
-    // Otras respuestas por coincidencia
     for (let clave in respuestas) {
-        if (
-            ["bienvenida", "despedida", "__default", "hablar con un asesor", "ver polizas", "consultar vencimientos", "comprar repuestos"]
-                .includes(clave)
-        ) continue;
-
+        if (["bienvenida", "hablar con tecnico", "reparar notebook", "reparar playstation", "estado reparacion", "__default"].includes(clave)) continue;
         if (texto.includes(clave.toLowerCase())) {
             return message.reply(respuestas[clave]);
         }
     }
 
-    // Respuesta por defecto
     if (respuestas["__default"]) {
         message.reply(respuestas["__default"]);
     }
