@@ -91,3 +91,5 @@ client.on('message', async message => {
         message.reply(respuestas["__default"]);
     }
 });
+
+client.initialize();
