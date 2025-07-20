@@ -4,5 +4,5 @@
   "reparar playstation": "🎮 Reparamos todas las versiones de PlayStation (PS3, PS4, PS5). Podés traer tu consola sin turno.",
   "estado reparacion": "🔎 Para consultar el estado de tu reparación, por favor respondé con tu *número de orden* o comunicate con un técnico.",
   "hablar con tecnico": "🛠️ Un técnico te va a contactar en breve. El bot quedará pausado durante 1 hora para que podamos ayudarte personalmente.",
-  "__default": "No entendí tu mensaje 🤖. Por favor escribí una opción válida del menú o respondé con el número correspondiente."
+  "__default": "No entendí tu mensaje 🤖. Por favor escribí una opción válida del menú o escribí *menu* para volver al inicio."
 }
