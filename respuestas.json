@@ -1,7 +1,7 @@
 {
   "bienvenida": "Hola 👋 Bienvenido al centro técnico. Soy tu asistente virtual, ¿cómo puedo ayudarte hoy?",
-  "reparar notebook": "📍 Para reparar tu notebook, acercala al local. Trabajamos con todas las marcas 💻. https://share.google/mFrMOggjcCO1iCk3i",
-  "reparar playstation": "🎮 Reparamos todas las versiones de PlayStation (PS3, PS4, PS5). Podés traer tu consola sin turno. https://share.google/mFrMOggjcCO1iCk3i" ,
+  "reparar notebook": "📍 Para reparar tu notebook, Podés dejarnos tus datos con la opción 5 y traer tu consola. https://share.google/mFrMOggjcCO1iCk3i, trabajamos con todas las marcas 💻. ",
+  "reparar playstation": "🎮 Reparamos todas las versiones de PlayStation (PS3, PS4, PS5). Podés dejarnos tus datos con la opción 5 y traer tu consola. https://share.google/mFrMOggjcCO1iCk3i",
   "estado reparacion": "🔎 Para consultar el estado de tu reparación, por favor respondé con opción 4 para comunicarte con un técnico.",
   "hablar con tecnico": "🔧 Para hablar con un técnico hacé clic acá 👉 https://wa.me/5491131433906\n\nMientras tanto, podés volver al *menu* si necesitás otra cosa.",
   "__default": "No entendí tu mensaje 🤖. Por favor escribí una opción válida del menú o escribí *menu* para volver al inicio."
