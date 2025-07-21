@@ -5,6 +5,7 @@ const fs = require('fs');
 const respuestas = JSON.parse(fs.readFileSync('./respuestas.json', 'utf8'));
 
 const usuariosSaludados = new Set();
+const esperandoDatos = new Set();
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -30,6 +31,7 @@ const enviarMenu = async (message) => {
 2️⃣ Arreglar mi PlayStation  
 3️⃣ Consultar estado de reparación  
 4️⃣ Hablar con un técnico  
+5️⃣ Dejar datos del equipo  
 
 ✏️ Escribí el número o palabra clave de la opción.  
 🧭 Escribí *menu* para volver al menú o *finalizar* para cerrar la conversación.
@@ -45,11 +47,13 @@ client.on('message', async message => {
     // FINALIZAR
     if (texto === "finalizar") {
         usuariosSaludados.delete(id);
+        esperandoDatos.delete(id);
         return message.reply("✅ Conversación finalizada. Escribí *hola* o cualquier mensaje para empezar de nuevo.");
     }
 
     // VOLVER AL MENÚ
     if (texto === "menu") {
+        esperandoDatos.delete(id);
         return enviarMenu(message);
     }
 
@@ -58,6 +62,14 @@ client.on('message', async message => {
         usuariosSaludados.add(id);
         await message.reply(respuestas["bienvenida"]);
         return enviarMenu(message);
+    }
+
+    // GUARDAR DATOS DEL EQUIPO
+    if (esperandoDatos.has(id)) {
+        esperandoDatos.delete(id);
+        const datos = `\n---\n📝 Datos del cliente (${new Date().toLocaleString()}):\nNúmero: ${id}\n${message.body}\n`;
+        fs.appendFileSync('datos_clientes.txt', datos);
+        return message.reply("✅ ¡Gracias! Guardamos los datos de tu equipo. Podés volver al *menu* o escribir *finalizar*.");
     }
 
     // OPCIONES DEL MENÚ
@@ -74,8 +86,12 @@ client.on('message', async message => {
     }
 
     if (texto === "4" || texto.includes("técnico") || texto.includes("hablar con un técnico") || texto.includes("asesor")) {
-        return message.reply(respuestas["hablar con tecnico"] || 
-            "🔧 Para hablar con un técnico hacé clic acá 👉 https://wa.me/5491131433906\n\nMientras tanto, podés volver al *menu* si necesitás otra cosa.");
+        return message.reply(respuestas["hablar con tecnico"]);
+    }
+
+    if (texto === "5" || texto.includes("dejar datos")) {
+        esperandoDatos.add(id);
+        return message.reply("📝 Por favor escribí los siguientes datos en un solo mensaje:\n\n*Nombre*\n*Marca del equipo*\n*Modelo*\n*Dirección del cliente*");
     }
 
     // RESPUESTAS PERSONALIZADAS
