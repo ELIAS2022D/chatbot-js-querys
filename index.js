@@ -69,7 +69,7 @@ client.on('message', async message => {
         esperandoDatos.delete(id);
         const datos = `\n---\n📝 Datos del cliente (${new Date().toLocaleString()}):\nNúmero: ${id}\n${message.body}\n`;
         fs.appendFileSync('datos_clientes.txt', datos);
-        return message.reply("✅ ¡Gracias! Guardamos los datos de tu equipo. Podés volver al *menu* o escribir *finalizar*.");
+        return message.reply("✅ ¡Gracias! Guardamos los datos de tu equipo y lo evaluará un asesor. Podés volver al *menu* o escribir *finalizar*.");
     }
 
     // OPCIONES DEL MENÚ
