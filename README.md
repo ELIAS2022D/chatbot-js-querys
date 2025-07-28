@@ -1,11 +1,11 @@
-# Bot de WhatsApp - Opción A (Respuestas Fijas)
+# Bot de WhatsApp - (Respuestas Fijas)
 
 Este bot responde automáticamente a mensajes de WhatsApp según palabras clave.
 
 ## 🧩 Requisitos
 
 - Node.js 18 o superior
-- Railway o servidor con acceso a consola
+- Render para montar la aplicación y tener acceso a consola
 
 ## 🚀 Cómo usar
 
