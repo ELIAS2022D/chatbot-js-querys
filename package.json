@@ -1,13 +1,13 @@
 {
-  "name": "bot-whatsapp-opcionA",
+  "name": "chatbot-advanced-querys",
   "version": "1.0.0",
-  "description": "Bot de WhatsApp con respuestas automáticas (opción A)",
-  "main": "index.js",
+  "description": "Chatbot integrado con WhatsApp para dar asistencia y respuestas automáticas.",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/index.js"
   },
   "dependencies": {
-    "whatsapp-web.js": "^1.21.1",
-    "qrcode-terminal": "^0.12.0"
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.31.0"
   }
 }

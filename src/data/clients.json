@@ -1,0 +1,22 @@
+{
+  "5491131433xxx": {
+    "nombre": "Tienda PlayTech",
+    "menu": [
+      "Respuesta Opcion 1",
+      "Respuesta Opcion 2",
+      "Respuesta Opcion 3"
+    ],
+    "activo": true
+  },
+
+  "5491122334xxx": {
+    "nombre": "Organizar Seguros",
+    "menu": [
+      "Respuesta Opcion 1",
+      "Respuesta Opcion 2",
+      "Respuesta Opcion 3"
+    ],
+    "activo": true
+  }
+  
+}
