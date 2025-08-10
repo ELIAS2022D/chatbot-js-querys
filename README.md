@@ -18,7 +18,7 @@ npm install whatsapp-web.js qrcode-terminal
 2. Iniciá el bot:
 
 ```
-node index.js
+npm start
 ```
 
 3. Escaneá el QR desde WhatsApp (en tu celular: WhatsApp > Dispositivos vinculados).
