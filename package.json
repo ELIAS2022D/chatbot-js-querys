@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Chatbot integrado con WhatsApp para dar asistencia y respuestas automáticas.",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.js"
   },
