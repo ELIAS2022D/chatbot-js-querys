@@ -1,31 +1,26 @@
 {
   "client1": {
     "name": "Tienda PlayTech",
-    "menu": [
-      {
-        "welcome": "Bienvenida",
-        "response1": "Respuesta Opcion 1",
-        "response2": "Respuesta Opcion 2",
-        "response3": "Respuesta Opcion 3",
-        "response4": "Respuesta Opcion 4",
-        "default": "Respuesta Default"
-      }
-    ],
+    "menu": {
+      "welcome": "Bienvenida",
+      "response1": "Respuesta Opcion 1",
+      "response2": "Respuesta Opcion 2",
+      "response3": "Respuesta Opcion 3",
+      "response4": "Respuesta Opcion 4",
+      "default": "Respuesta Default"
+    },
     "activo": true
   },
-  
   "client2": {
     "name": "Tienda PlayTech",
-    "menu": [
-      {
-        "welcome": "Bienvenida",
-        "response1": "Respuesta Opcion 1",
-        "response2": "Respuesta Opcion 2",
-        "response3": "Respuesta Opcion 3",
-        "response4": "Respuesta Opcion 4",
-        "default": "Respuesta Default"
-      }
-    ],
+    "menu": {
+      "welcome": "Bienvenida",
+      "response1": "Respuesta Opcion 1",
+      "response2": "Respuesta Opcion 2",
+      "response3": "Respuesta Opcion 3",
+      "response4": "Respuesta Opcion 4",
+      "default": "Respuesta Default"
+    },
     "activo": true
   }
 }
