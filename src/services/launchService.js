@@ -2,23 +2,28 @@
 // Client sirve para interactuar con WhatsApp
 // LocalAuth guarda datos de sesión para no tener que iniciar sesión cada vez
 import pkg from "whatsapp-web.js";
-const { Client, LocalAuth } = pkg;
 import qrcode from "qrcode-terminal";
 import fs from "fs";
+import getClients from "./clientsService.js";
+const { Client, LocalAuth } = pkg;
 
 function initializeService() {
   //Trae informacion de todos los clientes con los que trabajamos (clients.json)
   //Reemplazaríamos esta linea:
   const respuestas = JSON.parse(fs.readFileSync("./respuestas.json", "utf8"));
-  //const clients = getClientsOnSystem() <-- Implementar esa funcion
+
+  //Recibo el JSON de los clientes en el sistema
+  const clients = getClients();
 
   const usuariosSaludados = new Set();
   const esperandoDatos = new Set();
 
+  // Por cada cliente debemos hacer lo siguiente:
+  //---------------------------------------------------------
   const client = new Client({
     authStrategy: new LocalAuth(),
   });
-
+  
   // Muestra QR
   client.on("qr", (qr) => {
     qrcode.generate(qr, { small: true });
@@ -155,6 +160,7 @@ function initializeService() {
   });
 
   client.initialize();
+  //---------------------------------------------------------
 }
 
 export default initializeService;
