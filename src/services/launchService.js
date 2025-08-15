@@ -5,6 +5,7 @@ import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import fs from "fs";
 import getClients from "./clientsService.js";
+import handleMessage from "../handlers/messageHandler.js";
 const { Client, LocalAuth } = pkg;
 
 function initializeService() {
@@ -20,146 +21,33 @@ function initializeService() {
 
   // Por cada cliente debemos hacer lo siguiente:
   //---------------------------------------------------------
-  const client = new Client({
-    authStrategy: new LocalAuth(),
-  });
-  
-  // Muestra QR
-  client.on("qr", (qr) => {
-    qrcode.generate(qr, { small: true });
-    console.log("\n🔗 Escaneá desde otro dispositivo:\n");
-    console.log(
-      `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-        qr
-      )}&size=300x300`
-    );
-  });
+  Object.entries(clientsConfig).forEach(([clientId, config]) => {
+    if (config.active) {
+      const client = new Client({
+        authStrategy: new LocalAuth(),
+      });
 
-  // Funcion que se ejecuta cuando el chatbot comienza a funcionar
-  client.on("ready", () => {
-    console.log("🤖 Chatbot listo para responder mensajes...");
-  });
+      // Muestra QR
+      client.on("qr", (qr) => {
+        qrcode.generate(qr, { small: true });
+        console.log(`\n🔗 QR para cliente ${config.name}\n`);
+        //Esta linea no es necesaria
+        // console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=100x100`);
+      });
 
-  // Función que envía un mensaje
-  const enviarMenu = async (message) => {
-    const menu = `
-🔧 *¿Qué necesitás hacer?*
+      // Funcion que se ejecuta cuando el chatbot comienza a funcionar
+      client.on("ready", () => {
+        console.log(`🤖 Chatbot de ${config.name} listo para responder mensajes!`);
+      });
 
-1️⃣ Reparar mi notebook  
-2️⃣ Arreglar mi PlayStation  
-3️⃣ Consultar estado de reparación  
-4️⃣ Hablar con un técnico  
-5️⃣ Dejar datos del equipo  
+      // Funcion que se ejecuta al recibir un mensaje
+      client.on("message", async (message) => {
+        handleMessage(message, config.menu);
+      });
 
-✏️ Escribí el número o palabra clave de la opción.  
-🧭 Escribí *menu* para volver al menú o *finalizar* para cerrar la conversación.
-    `.trim();
-
-    await message.reply(menu);
-  };
-
-  // Funcion que se ejecuta al recibir un mensaje
-  client.on("message", async (message) => {
-    const texto = message.body.toLowerCase();
-    const id = message.from;
-
-    // FINALIZAR
-    if (texto === "finalizar") {
-      usuariosSaludados.delete(id);
-      esperandoDatos.delete(id);
-      return message.reply(
-        "✅ Conversación finalizada. Escribí *hola* o cualquier mensaje para empezar de nuevo."
-      );
-    }
-
-    // VOLVER AL MENÚ
-    if (texto === "menu") {
-      esperandoDatos.delete(id);
-      return enviarMenu(message);
-    }
-
-    // PRIMER CONTACTO
-    if (!usuariosSaludados.has(id)) {
-      usuariosSaludados.add(id);
-      await message.reply(respuestas["bienvenida"]);
-      return enviarMenu(message);
-    }
-
-    // GUARDAR DATOS DEL EQUIPO
-    if (esperandoDatos.has(id)) {
-      esperandoDatos.delete(id);
-      const datos = `\n---\n📝 Datos del cliente (${new Date().toLocaleString()}):\nNúmero: ${id}\n${
-        message.body
-      }\n`;
-      fs.appendFileSync("datos_clientes.txt", datos);
-      return message.reply(
-        "✅ ¡Gracias! Guardamos los datos de tu equipo y lo evaluará un asesor. Podés volver al *menu* o escribir *finalizar*."
-      );
-    }
-
-    // OPCIONES DEL MENÚ
-    if (texto === "1" || texto.includes("notebook")) {
-      return message.reply(respuestas["reparar notebook"]);
-    }
-
-    if (
-      texto === "2" ||
-      texto.includes("playstation") ||
-      texto.includes("ps4") ||
-      texto.includes("ps5")
-    ) {
-      return message.reply(respuestas["reparar playstation"]);
-    }
-
-    if (
-      texto === "3" ||
-      texto.includes("estado") ||
-      texto.includes("reparación")
-    ) {
-      return message.reply(respuestas["estado reparacion"]);
-    }
-
-    if (
-      texto === "4" ||
-      texto.includes("técnico") ||
-      texto.includes("hablar con un técnico") ||
-      texto.includes("asesor")
-    ) {
-      return message.reply(respuestas["hablar con tecnico"]);
-    }
-
-    if (texto === "5" || texto.includes("dejar datos")) {
-      esperandoDatos.add(id);
-      return message.reply(
-        "📝 Por favor escribí los siguientes datos en un solo mensaje:\n\n*Nombre*\n*Marca del equipo*\n*Modelo*\n*Dirección del cliente*"
-      );
-    }
-
-    // RESPUESTAS PERSONALIZADAS
-    for (let clave in respuestas) {
-      if (
-        [
-          "bienvenida",
-          "hablar con tecnico",
-          "reparar notebook",
-          "reparar playstation",
-          "estado reparacion",
-          "__default",
-        ].includes(clave)
-      )
-        continue;
-      if (texto.includes(clave.toLowerCase())) {
-        return message.reply(respuestas[clave]);
-      }
-    }
-
-    // RESPUESTA POR DEFAULT
-    if (respuestas["__default"]) {
-      message.reply(respuestas["__default"]);
+      client.initialize();
     }
   });
-
-  client.initialize();
   //---------------------------------------------------------
 }
 

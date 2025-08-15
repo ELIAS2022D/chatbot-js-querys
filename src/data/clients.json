@@ -1,6 +1,6 @@
 {
   "client1": {
-    "name": "Tienda PlayTech",
+    "name": "Elias",
     "menu": {
       "welcome": "Bienvenida",
       "response1": "Respuesta Opcion 1",
@@ -9,10 +9,10 @@
       "response4": "Respuesta Opcion 4",
       "default": "Respuesta Default"
     },
-    "activo": true
+    "active": true
   },
   "client2": {
-    "name": "Tienda PlayTech",
+    "name": "Eze",
     "menu": {
       "welcome": "Bienvenida",
       "response1": "Respuesta Opcion 1",
@@ -21,6 +21,6 @@
       "response4": "Respuesta Opcion 4",
       "default": "Respuesta Default"
     },
-    "activo": true
+    "active": true
   }
 }
