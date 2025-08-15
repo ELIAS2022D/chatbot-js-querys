@@ -2,24 +2,24 @@
   "client1": {
     "name": "Elias",
     "menu": {
-      "welcome": "Bienvenida",
+      "welcome": "Hola, soy Elías",
       "response1": "Respuesta Opcion 1",
       "response2": "Respuesta Opcion 2",
       "response3": "Respuesta Opcion 3",
       "response4": "Respuesta Opcion 4",
-      "default": "Respuesta Default"
+      "default": "Respuesta Default de Elías"
     },
     "active": true
   },
   "client2": {
     "name": "Eze",
     "menu": {
-      "welcome": "Bienvenida",
+      "welcome": "Hola, soy Eze!",
       "response1": "Respuesta Opcion 1",
       "response2": "Respuesta Opcion 2",
       "response3": "Respuesta Opcion 3",
       "response4": "Respuesta Opcion 4",
-      "default": "Respuesta Default"
+      "default": "Respuesta Default de Eze"
     },
     "active": true
   }

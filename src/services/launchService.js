@@ -9,46 +9,33 @@ import handleMessage from "../handlers/messageHandler.js";
 const { Client, LocalAuth } = pkg;
 
 function initializeService() {
-  //Trae informacion de todos los clientes con los que trabajamos (clients.json)
-  //Reemplazaríamos esta linea:
-  const respuestas = JSON.parse(fs.readFileSync("./respuestas.json", "utf8"));
-
-  //Recibo el JSON de los clientes en el sistema
   const clientsConfig = getClients();
 
-  const usuariosSaludados = new Set();
-  const esperandoDatos = new Set();
-
-  // Por cada cliente debemos hacer lo siguiente:
-  //---------------------------------------------------------
   Object.entries(clientsConfig).forEach(([clientId, config]) => {
-    if (config.active) {
-      const client = new Client({
-        authStrategy: new LocalAuth(),
-      });
+    if (!config.active) return;
 
-      // Muestra QR
-      client.on("qr", (qr) => {
-        qrcode.generate(qr, { small: true });
-        console.log(`\n🔗 QR para cliente ${config.name}\n`);
-        //Esta linea no es necesaria
-        // console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=100x100`);
-      });
+    const client = new Client({
+      authStrategy: new LocalAuth({ clientId }),
+    });
 
-      // Funcion que se ejecuta cuando el chatbot comienza a funcionar
-      client.on("ready", () => {
-        console.log(`🤖 Chatbot de ${config.name} listo para responder mensajes!`);
-      });
+    client.on("qr", (qr) => {
+      console.log(`\n🔗 QR para cliente ${config.name}\n`);
+      qrcode.generate(qr, { small: true });
+      console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=100x100`);
+    });
 
-      // Funcion que se ejecuta al recibir un mensaje
-      client.on("message", async (message) => {
-        handleMessage(message, config.menu);
-      });
+    client.on("ready", () => {
+      console.log(
+        `🤖 Chatbot de ${config.name} listo para responder mensajes!`
+      );
+    });
 
-      client.initialize();
-    }
+    client.on("message", async (message) => {
+      handleMessage(message, config.menu);
+    });
+
+    client.initialize(); // No se espera, se lanza y los eventos se gestionan solos
   });
-  //---------------------------------------------------------
 }
 
 export default initializeService;
