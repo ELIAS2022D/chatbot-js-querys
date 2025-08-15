@@ -14,7 +14,7 @@ function initializeService() {
   const respuestas = JSON.parse(fs.readFileSync("./respuestas.json", "utf8"));
 
   //Recibo el JSON de los clientes en el sistema
-  const clients = getClients();
+  const clientsConfig = getClients();
 
   const usuariosSaludados = new Set();
   const esperandoDatos = new Set();
