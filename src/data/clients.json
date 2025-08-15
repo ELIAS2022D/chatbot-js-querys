@@ -1,22 +1,31 @@
 {
-  "5491131433xxx": {
-    "nombre": "Tienda PlayTech",
+  "client1": {
+    "name": "Tienda PlayTech",
     "menu": [
-      "Respuesta Opcion 1",
-      "Respuesta Opcion 2",
-      "Respuesta Opcion 3"
+      {
+        "welcome": "Bienvenida",
+        "response1": "Respuesta Opcion 1",
+        "response2": "Respuesta Opcion 2",
+        "response3": "Respuesta Opcion 3",
+        "response4": "Respuesta Opcion 4",
+        "default": "Respuesta Default"
+      }
     ],
     "activo": true
   },
-
-  "5491122334xxx": {
-    "nombre": "Organizar Seguros",
+  
+  "client2": {
+    "name": "Tienda PlayTech",
     "menu": [
-      "Respuesta Opcion 1",
-      "Respuesta Opcion 2",
-      "Respuesta Opcion 3"
+      {
+        "welcome": "Bienvenida",
+        "response1": "Respuesta Opcion 1",
+        "response2": "Respuesta Opcion 2",
+        "response3": "Respuesta Opcion 3",
+        "response4": "Respuesta Opcion 4",
+        "default": "Respuesta Default"
+      }
     ],
     "activo": true
   }
-  
 }
