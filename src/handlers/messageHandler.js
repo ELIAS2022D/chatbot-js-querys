@@ -1,6 +1,6 @@
 async function handleMessage(message, menu) {
   const texto = message.body.toLowerCase();
-
+  
   //Necesitamos guardar y evaluar la hora del ultimo mensaje para saber si hay que mandarle el menú o simplemente devolverle el default
 
   if (texto === "menu") {
