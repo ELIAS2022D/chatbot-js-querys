@@ -4,7 +4,7 @@
     "menu": {
       
       "welcome": "🍽 ¡Bienvenido/a a [Nombre del Restaurante]! \n\nElija una opción para continuar:\n\n⿡ Ver menú de comidas 🥘\n⿢ Hacer un pedido para delivery 🚚\n⿣ Consultar estado de mi pedido ⏱\n⿤ Promociones del día 🎉\n⿥ Hablar con un representante 👨‍🍳\n⿦ Información del restaurante 📍\n\n✏ Escribí el número o palabra clave de la opción.\n🧭 Escribí menu para volver al menú o finalizar para cerrar la conversación.",
-      
+
       "response1": "📖 Nuestro Menú de Comidas \n\n🍕 Pizzas (desde $XXXX)\n🍔 Hamburguesas (desde $XXXX)\n🥗 Ensaladas (desde $XXXX)\n🍝 Pastas (desde $XXXX)\n🥤 Bebidas (desde $XXXX)\n\n👉 Para hacer un pedido, escribí 2 o “pedido",
       
       "response2": "🚚 ¡Genial! Para procesar tu pedido necesitamos estos datos: \n\n📝 Nombre y Apellido:\n📍 Dirección:\n📦 Pedido (detalle con menú y cantidad):\n📱 Teléfono de contacto:\n\n✅ Te confirmaremos tu pedido y el tiempo estimado de entrega.",

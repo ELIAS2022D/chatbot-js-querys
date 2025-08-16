@@ -12,8 +12,10 @@ function initializeService() {
   const clientsConfig = getClients();
 
   Object.entries(clientsConfig).forEach(([clientId, config]) => {
+    //Si el cliente no está activo, no generamos QR (Sirve para dar de baja clientes)
     if (!config.active) return;
 
+    //Crea cliente para configurar
     const client = new Client({
       authStrategy: new LocalAuth({ clientId }),
     });
@@ -22,6 +24,7 @@ function initializeService() {
       console.log(`\n🔗 QR para cliente ${config.name}\n`);
       qrcode.generate(qr, { small: true });
       console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=100x100`);
+      //Necesitamos conseguir una manera de enviar el QR de manera más directa al usuario y esteticamente mejor (Quizás con un bot propio)
     });
 
     client.on("ready", () => {
