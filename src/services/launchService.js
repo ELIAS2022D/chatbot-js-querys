@@ -23,7 +23,11 @@ function initializeService() {
     client.on("qr", (qr) => {
       console.log(`\n🔗 QR para cliente ${config.name}\n`);
       qrcode.generate(qr, { small: true });
-      console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=100x100`);
+      console.log(
+        `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+          qr
+        )}&size=100x100`
+      );
       //Necesitamos conseguir una manera de enviar el QR de manera más directa al usuario y esteticamente mejor (Quizás con un bot propio)
     });
 
@@ -34,7 +38,10 @@ function initializeService() {
     });
 
     client.on("message", async (message) => {
-      handleMessage(message, config.menu);
+      //message.body → el texto del mensaje | message.from → el número del cliente | message.reply() → para responder
+      //clientId → Es la clave que identifica al cliente en clients.json. Ejemplo: "client1", "client2", (NO el nombre) etc.
+      //clientsConfig[clientId] → Es el objeto de configuración completo de ese cliente. Incluye: name menu keywords active
+      handleMessage(message, clientId, clientsConfig[clientId]);
     });
 
     client.initialize(); // No se espera, se lanza y los eventos se gestionan solos
