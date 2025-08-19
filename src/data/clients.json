@@ -2,8 +2,8 @@
   "client1": {
     "name": "Restaurante Demo",
     "menu": {
-      "welcome": "🍽 ¡Bienvenido/a a [Nombre del Restaurante]! \n\nElija una opción para continuar:\n\n⿡ Ver menú de comidas 🥘\n⿢ Hacer un pedido para delivery 🚚\n⿣ Consultar estado de mi pedido ⏱\n⿤ Promociones del día 🎉\n⿥ Hablar con un representante 👨‍🍳\n⿦ Información del restaurante 📍\n\n✏ Escribí el número o palabra clave de la opción.\n🧭 Escribí menu para volver al menú o finalizar para cerrar la conversación.",
-      "response1": "📖 Nuestro Menú de Comidas \n\n🍕 Pizzas (desde $XXXX)\n🍔 Hamburguesas (desde $XXXX)\n🥗 Ensaladas (desde $XXXX)\n🍝 Pastas (desde $XXXX)\n🥤 Bebidas (desde $XXXX)\n\n👉 Para hacer un pedido, escribí 2 o “pedido",
+      "welcome": "🍽 ¡Bienvenido/a a [Nombre del Restaurante]! \n\nElija una opción para continuar:\n\n1️⃣ Ver menú de comidas 🥘\n2️⃣ Hacer un pedido para delivery 🚚\n3️⃣ Consultar estado de mi pedido ⏱\n4️⃣ Promociones del día 🎉\n5️⃣ Hablar con un representante 👨‍🍳\n6️⃣ Información del restaurante 📍\n\n✏ Escribí el número o palabra clave de la opción.\n🧭 Escribí menu para volver al menú o finalizar para cerrar la conversación.",
+      "response1": "📖 Nuestro Menú de Comidas \n\n🍕 Pizzas (desde $XXXX)\n🍔 Hamburguesas (desde $XXXX)\n🥗 Ensaladas (desde $XXXX)\n🍝 Pastas (desde $XXXX)\n🥤 Bebidas (desde $XXXX)\n\n👉 Para hacer un pedido, escribí 2 o pedido",
       "response2": "🚚 ¡Genial! Para procesar tu pedido necesitamos estos datos: \n\n📝 Nombre y Apellido:\n📍 Dirección:\n📦 Pedido (detalle con menú y cantidad):\n📱 Teléfono de contacto:\n\n✅ Te confirmaremos tu pedido y el tiempo estimado de entrega.",
       "response3": "⏱ Para consultar tu pedido necesitamos: \n\n📱 Número de teléfono con el que lo realizaste\nó\n📦 Número de pedido (si lo tenés)\n\n🔍 Te informaremos el estado y tiempo estimado de entrega.",
       "response4": "🎉 Promociones del día en [Nombre del Restaurante] \n\n🍔 Combo Hamburguesa + Papas + Gaseosa: $XXXX\n🍕 2 Pizzas grandes a elección: $XXXX\n🥤 2x1 en bebidas hasta las 20hs\n\n👉 Para pedir una promo, escribí 2 y detallá la promoción que querés.",
