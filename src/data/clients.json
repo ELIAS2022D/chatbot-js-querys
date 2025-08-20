@@ -1,14 +1,18 @@
 {
   "client1": {
-    "name": "Restaurante Demo",
+    "name": "Organizar Seguros",
     "menu": {
-      "welcome": "🍽 ¡Bienvenido/a a [Nombre del Restaurante]! \n\nElija una opción para continuar:\n\n1️⃣ Ver menú de comidas 🥘\n2️⃣ Hacer un pedido para delivery 🚚\n3️⃣ Consultar estado de mi pedido ⏱\n4️⃣ Promociones del día 🎉\n5️⃣ Hablar con un representante 👨‍🍳\n6️⃣ Información del restaurante 📍\n\n✏ Escribí el número o palabra clave de la opción.\n🧭 Escribí menu para volver al menú o finalizar para cerrar la conversación.",
-      "response1": "📖 Nuestro Menú de Comidas \n\n🍕 Pizzas (desde $XXXX)\n🍔 Hamburguesas (desde $XXXX)\n🥗 Ensaladas (desde $XXXX)\n🍝 Pastas (desde $XXXX)\n🥤 Bebidas (desde $XXXX)\n\n👉 Para hacer un pedido, escribí 2 o pedido",
-      "response2": "🚚 ¡Genial! Para procesar tu pedido necesitamos estos datos: \n\n📝 Nombre y Apellido:\n📍 Dirección:\n📦 Pedido (detalle con menú y cantidad):\n📱 Teléfono de contacto:\n\n✅ Te confirmaremos tu pedido y el tiempo estimado de entrega.",
-      "response3": "⏱ Para consultar tu pedido necesitamos: \n\n📱 Número de teléfono con el que lo realizaste\nó\n📦 Número de pedido (si lo tenés)\n\n🔍 Te informaremos el estado y tiempo estimado de entrega.",
-      "response4": "🎉 Promociones del día en [Nombre del Restaurante] \n\n🍔 Combo Hamburguesa + Papas + Gaseosa: $XXXX\n🍕 2 Pizzas grandes a elección: $XXXX\n🥤 2x1 en bebidas hasta las 20hs\n\n👉 Para pedir una promo, escribí 2 y detallá la promoción que querés.",
-      "default": "⚠ No entendí tu respuesta. Por favor elegí una opción válida del menú o escribí menu para volver a empezar."
+      "welcome": "👋 ¡Bienvenido/a a Organizar Seguros! \n\nSeleccioná una opción para continuar:\n\n1️⃣ Cotización de seguro 💰\n2️⃣ Denunciar un siniestro 🚨\n3️⃣ Pedido de anulación ❌\n4️⃣ Solicitar grúa 🚙\n5️⃣ Consultar mi póliza / cupón de pago 📑\n6️⃣ Otras consultas ✍️\n7️⃣ Hablar con una persona ☎️\n\n✏ Escribí el número o palabra clave de la opción.\n🧭 Escribí *menu* para volver al menú o *finalizar* para cerrar la conversación.",
+      "response1": "💰 Para poder cotizar tu seguro necesitamos los siguientes datos:\n\n📝 Nombre y apellido:\n🆔 DNI:\n🎂 Fecha de nacimiento:\n📌 Tipo de seguro (auto, moto, hogar, vida, etc.):\n🚗 Marca, modelo y año del vehículo (si aplica):\n🏠 Localidad / domicilio:\n\n👉 Una vez que nos envíes esta información, te pasaremos la cotización.",
+      "response2": "🚨 Para realizar la denuncia de un siniestro necesitamos:\n\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n📅 Fecha y hora del siniestro:\n📍 Lugar del hecho:\n✏ Breve descripción de lo ocurrido:\n\n📩 También podés completar el siguiente formulario y enviárnoslo completo: [enlace al formulario].",
+      "response3": "❌ Para avanzar con la anulación necesitamos:\n\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n✏ Motivo de la anulación:\n\nNuestro equipo procesará tu pedido y te confirmaremos el estado.",
+      "response4": "🚙 Para solicitar asistencia de grúa necesitamos:\n\n📝 Nombre del titular:\n📑 Nº de póliza:\n📍 Dirección exacta donde se encuentra el vehículo:\n➡️ Destino al que quiere trasladarlo:\n\nEn minutos enviaremos tu solicitud a la compañía.",
+      "response5": "📑 Si necesitás tu póliza o cupón de pago, podemos gestionarlo automáticamente.\n\n👉 Por favor enviá:\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n\nUna vez recibido, descargaremos y te enviaremos el documento.",
+      "response6": "✍️ Por favor escribinos tu consulta y uno de nuestros asesores te responderá a la brevedad.",
+      "response7": "☎️ Un asesor se pondrá en contacto con vos lo antes posible. ¡Gracias por tu paciencia!",
+      "default": "⚠ No entendí tu respuesta. Por favor elegí una opción válida del menú o escribí *menu* para volver a empezar."
     },
+
     "keywords": {
       "response1": [
         "menu",
