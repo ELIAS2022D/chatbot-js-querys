@@ -6,7 +6,7 @@ async function handleMessage(message, clientId, config) {
   //Necesitamos guardar y evaluar la hora del ultimo mensaje para saber si hay que mandarle el menú o simplemente devolverle el default
   //Lo mejor sería no tener que depender de un menu configurado de forma estática sino generar menú de forma flexible según la cantidad de menus y mensajes disponibles por clientes
 
-  if (texto === "menu") {
+  if (texto === "hola" || texto === "menu") {
     return message.reply(menu.welcome);
   } else if (texto === "1") {
     return message.reply(menu.response1);
@@ -16,6 +16,12 @@ async function handleMessage(message, clientId, config) {
     return message.reply(menu.response3);
   } else if (texto === "4") {
     return message.reply(menu.response4);
+  } else if (texto === "5") {
+    return message.reply(menu.response5);
+  } else if (texto === "6") {
+    return message.reply(menu.response6);
+  } else if (texto === "7") {
+    return message.reply(menu.response7);
   } else {
     for (const [responseKey, keywordList] of Object.entries(keywords)) {
       //Si algun keyword está en el texto
