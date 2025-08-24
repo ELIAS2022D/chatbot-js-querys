@@ -3,8 +3,8 @@
     "name": "Organizar Seguros",
     "menu": {
       "welcome": "👋 ¡Bienvenido/a a Organizar Seguros! \n\nSeleccioná una opción para continuar:\n\n1️⃣ Cotización de seguro 💰\n2️⃣ Denunciar un siniestro 🚨\n3️⃣ Pedido de anulación ❌\n4️⃣ Solicitar grúa 🚙\n5️⃣ Consultar mi póliza / cupón de pago 📑\n6️⃣ Otras consultas ✍️\n7️⃣ Hablar con una persona ☎️\n\n✏ Escribí el número o palabra clave de la opción.\n🧭 Escribí *menu* para volver al menú o *finalizar* para cerrar la conversación.",
-      "response1": "💰 Para poder cotizar tu seguro necesitamos los siguientes datos:\n\n📝 Nombre y apellido:\n🆔 DNI:\n🎂 Fecha de nacimiento:\n📌 Tipo de seguro (auto, moto, hogar, vida, etc.):\n🚗 Marca, modelo y año del vehículo (si aplica):\n🏠 Localidad / domicilio:\n\n👉 Una vez que nos envíes esta información, te pasaremos la cotización.",
-      "response2": "🚨 Para realizar la denuncia de un siniestro necesitamos:\n\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n📅 Fecha y hora del siniestro:\n📍 Lugar del hecho:\n✏ Breve descripción de lo ocurrido:\n\n📩 También podés completar el siguiente formulario y enviárnoslo completo: [enlace al formulario].",
+      "response1": "💰 Para poder cotizar tu seguro necesitamos los siguientes datos:\n\n📝 Nombre y apellido:\n🆔 DNI:\n🎂 Fecha de nacimiento:\n📌 Tipo de seguro (auto, moto, hogar, vida, etc.):\n🚗/🏍️ Marca, modelo y año del vehículo (si aplica):\n🏠 Localidad / domicilio:\n\n👉 Una vez que nos envíes esta información, te pasaremos la cotización.",
+      "response2": "🚨 Para realizar la denuncia de un siniestro necesitamos:\n\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n📅 Fecha y hora del siniestro:\n📍 Lugar del hecho:\n✏ Breve descripción de lo ocurrido:\n\n📩Nuestro equipo procesará tu siniestro y te confirmaremos el estado del mismo.",
       "response3": "❌ Para avanzar con la anulación necesitamos:\n\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n✏ Motivo de la anulación:\n\nNuestro equipo procesará tu pedido y te confirmaremos el estado.",
       "response4": "🚙 Para solicitar asistencia de grúa necesitamos:\n\n📝 Nombre del titular:\n📑 Nº de póliza:\n📍 Dirección exacta donde se encuentra el vehículo:\n➡️ Destino al que quiere trasladarlo:\n\nEn minutos enviaremos tu solicitud a la compañía.",
       "response5": "📑 Si necesitás tu póliza o cupón de pago, podemos gestionarlo automáticamente.\n\n👉 Por favor enviá:\n📝 Nombre y apellido del titular:\n📑 Nº de póliza:\n\nUna vez recibido, descargaremos y te enviaremos el documento.",
@@ -15,28 +15,41 @@
 
     "keywords": {
       "response1": [
-        "menu",
-        "ayuda",
-        "hola",
+        "cotizacion",
+        "cotizar",
         "1"
       ],
       "response2": [
-        "pedido",
-        "delivery",
+        "siniestro",
+        "denunciar",
+        "denuncia",
         "2"
       ],
       "response3": [
-        "estado",
-        "consulta",
+        "anulacion",
+        "anular",
         "3"
       ],
       "response4": [
-        "promo",
-        "promociones",
+        "grua",
+        "asistencia",
         "4"
+      ],
+      "response5": [
+        "poliza",
+        "cupon de pago",
+        "5"
+      ],
+      "response6": [
+        "consulta",
+        "6"
+      ],
+      "response7": [
+        "humano",
+        "asesor",
+        "7"
       ]
     },
-    "plan": "",
     "active": true
   }
 }
