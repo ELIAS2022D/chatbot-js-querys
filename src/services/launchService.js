@@ -3,12 +3,11 @@
 // LocalAuth guarda datos de sesión para no tener que iniciar sesión cada vez
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
-import fs from "fs";
-import getClients from "./clientsService.js";
-import handleMessage from "../handlers/messageHandler.js";
+import { getClients } from "./clientsService.js";
+import { handleMessage } from "../handlers/messageHandler.js";
 const { Client, LocalAuth } = pkg;
 
-function initializeService() {
+const initializeService = () => {
   const clientsConfig = getClients();
 
   Object.entries(clientsConfig).forEach(([clientId, config]) => {
@@ -46,6 +45,6 @@ function initializeService() {
 
     client.initialize(); // No se espera, se lanza y los eventos se gestionan solos
   });
-}
+};
 
-export default initializeService;
+export { initializeService };

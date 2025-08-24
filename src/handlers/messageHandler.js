@@ -1,8 +1,15 @@
-async function handleMessage(message, clientId, config) {
+import { existUserSession, createUserSession } from "../services/usersSessionsService.js";
+
+const handleMessage = async (message, clientId, config) => {
   const texto = message.body.toLowerCase();
   const keywords = config.keywords;
   const menu = config.menu;
 
+  //Si todavía no se creó el user session significa que es la primera vez que habla
+  // clientId = client1, etc
+  if (!existUserSession(message, clientId)) {
+    createUserSession(message, clientId);
+  }
   //Necesitamos guardar y evaluar la hora del ultimo mensaje para saber si hay que mandarle el menú o simplemente devolverle el default
   //Lo mejor sería no tener que depender de un menu configurado de forma estática sino generar menú de forma flexible según la cantidad de menus y mensajes disponibles por clientes
 
@@ -26,13 +33,14 @@ async function handleMessage(message, clientId, config) {
     for (const [responseKey, keywordList] of Object.entries(keywords)) {
       //Si algun keyword está en el texto
       if (keywordList.some((kw) => texto.includes(kw))) {
-
-        return message.reply("Creo que te refieres a esto: \n" + menu[responseKey]);
+        return message.reply(
+          "Creo que te refieres a esto: \n" + menu[responseKey]
+        );
       }
     }
 
     return message.reply(menu.default);
   }
-}
+};
 
-export default handleMessage;
+export { handleMessage };
