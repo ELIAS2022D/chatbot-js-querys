@@ -1,12 +1,14 @@
-{
-    "+5492262513045": {
-        "dni": "41314626", 
-        "name": "Ezequias Herrera",
-        "age": "26"
-    },
-    "+5491131433906": {
-        "dni": "40239581", 
-        "name": "Elias Derrico",
-        "age": "26"
-    }
-}
+[
+  {
+    "phone": "5492262513045",
+    "dni": "41314626",
+    "name": "Ezequias Herrera",
+    "age": "26"
+  },
+  {
+    "phone": "5491131433906",
+    "dni": "40239581",
+    "name": "Elias Derrico",
+    "age": "26"
+  }
+]

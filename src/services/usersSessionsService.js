@@ -1,19 +1,29 @@
 import fs from "fs";
 import path from "path";
 
+const fileExists = async (path) => {
+  return fs.promises
+    .access(path)
+    .then(() => true)
+    .catch(() => false);
+};
+
+const existUserOnFile = async (path, id) => {
+  //Traigo todos los datos de usuario de mi cliente
+  const data = await fs.promises.readFile(path, "utf-8");
+  //Los transformo de texto a objeto
+  const users = JSON.parse(data);
+  users.find(user => {user.phone; console.log("Lo encontré");});
+}
+
 const existUserSession = async (message, clientId) => {
   const cellphone = formatCellphoneNumber(message);
   const path = `src/data/sessions/${clientId}.json`;
-  console.log(path);
 
-  //Existe el archivo donde se guardan las user Sessions?
-  try {
-    await fs.promises.access(path);
-    console.log("true");
-    return true;
-  } catch {
-    console.log("false");
-    return false;
+  const exists = await fileExists(path);
+  //Si existe el archivo busco el usuario
+  if (exists) {
+    existUserOnFile(path, cellphone)
   }
 };
 
