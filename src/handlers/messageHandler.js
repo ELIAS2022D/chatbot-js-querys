@@ -11,7 +11,6 @@ const includesAny = (text, arr) =>
 
 // Validación de formularios según la opción
 const validateForm = (session, rawText) => {
-  // Contamos líneas con el texto original (no lowercased)
   const ok = {
     waitingDataPoliza: hasMinLines(rawText, 2),      // p.ej.: Nº póliza + Nombre/DNI
     waitingDataGenerico: hasMinLines(rawText, 2),    // grúa, anulación, otras, denunciar
@@ -26,18 +25,15 @@ const handleMessage = async (message, clientId, config) => {
   const keywords = config.keywords || {};
   const userId = message.from;
 
-  // Si es primer contacto, creamos sesión de usuario persistente (tu servicio)
   if (!(await existUserSession(message, clientId))) {
     await createUserSession(message, clientId);
   }
 
-  // Reset al inicio
   if (texto === "hola" || texto === "menu") {
     sessions[userId] = null;
     return message.reply(menu.welcome);
   }
 
-  // En qué parte del flujo está
   const currentSession = sessions[userId];
 
   // ---- MENÚ PRINCIPAL ----
@@ -45,7 +41,7 @@ const handleMessage = async (message, clientId, config) => {
     switch (texto) {
       case "1":
       case "cotizacion":
-        sessions[userId] = "1";             // submenú cotización
+        sessions[userId] = "1";
         return message.reply(menu.response1);
 
       case "2":
@@ -58,7 +54,7 @@ const handleMessage = async (message, clientId, config) => {
       case "póliza":
       case "cupon":
       case "cupón":
-        sessions[userId] = "3";             // submenú póliza/cupón
+        sessions[userId] = "3";
         return message.reply(menu.response3);
 
       case "4":
@@ -75,16 +71,15 @@ const handleMessage = async (message, clientId, config) => {
 
       case "6":
       case "otras":
-        sessions[userId] = "waitingDataGenerico";
+        sessions[userId] = "directResponse";
         return message.reply(menu.response6);
 
       case "7":
       case "asesor":
-        sessions[userId] = "waitingDataGenerico";
+        sessions[userId] = "directResponse";
         return message.reply(menu.response7);
 
       default:
-        // Keywords sueltos
         for (const [responseKey, list] of Object.entries(keywords)) {
           if (list.some(kw => texto.includes(kw))) {
             return message.reply("Creo que te refieres a esto: \n" + menu[responseKey]);
@@ -101,13 +96,13 @@ const handleMessage = async (message, clientId, config) => {
         sessions[userId] = "waitingDataCotizacion";
         return message.reply(
           (menu.response1_1 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nMarca/Modelo/Año\nPatente"
+          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nDNI\nMarca/Modelo/Año\nPatente"
         );
       case "2":
         sessions[userId] = "waitingDataCotizacion";
         return message.reply(
           (menu.response1_2 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nMarca/Modelo/Año\nCilindrada\nPatente"
+          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nDNI\nMarca/Modelo/Año\nCilindrada"
         );
       case "3":
         sessions[userId] = "waitingDataCotizacion";
@@ -122,7 +117,6 @@ const handleMessage = async (message, clientId, config) => {
 
   // ---- SUBMENÚ PÓLIZA/CUPÓN (3) ----
   if (currentSession === "3") {
-    // Aceptamos números 1/2 y también palabras clave
     if (texto === "1" || includesAny(texto, ["poliza", "póliza"])) {
       sessions[userId] = "waitingDataPoliza";
       return message.reply(
@@ -138,7 +132,6 @@ const handleMessage = async (message, clientId, config) => {
       );
     }
 
-    // Si el usuario pega directamente los datos (2+ líneas), lo tomo como formulario de póliza/cupón
     if (hasMinLines(message.body, 2)) {
       if (!validateForm("waitingDataPoliza", message.body)) {
         return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.\n\nEjemplo:\n123456789\nJuan Pérez - 12345678");
@@ -147,20 +140,24 @@ const handleMessage = async (message, clientId, config) => {
       return message.reply("✅ Recibido, en instantes tendrá su respuesta.");
     }
 
-    // Nada válido en submenú
     return message.reply(menu.default);
   }
 
-  // ---- CAPTURA DE DATOS (todas las opciones que piden info) ----
+  // ---- OPCIONES 6 y 7 (RESPUESTA DIRECTA) ----
+  if (currentSession === "directResponse") {
+    sessions[userId] = null;
+    return message.reply("✅ Recibida su respuesta.");
+  }
+
+  // ---- CAPTURA DE DATOS (otras opciones) ----
   if (currentSession?.startsWith("waitingData")) {
     if (!validateForm(currentSession, message.body)) {
       return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.");
     }
-    sessions[userId] = null; // volvemos al menú principal
+    sessions[userId] = null;
     return message.reply("✅ Recibido, en instantes tendrá su respuesta.");
   }
 
-  // Fallback
   return message.reply(menu.default);
 };
 

@@ -9,7 +9,7 @@
     "response1_2": "🏍 Cotización de Moto\n\nNecesitamos:\n- Nombre y apellido del titular\n- DNI\n- Marca/Modelo/Año\n- Cilindrada\n- Patente\n- Fecha de nacimiento\n- Localidad",
     "response1_3": "🏠 Cotización de Hogar\n\nEnviá estos datos:\n- Nombre y apellido del titular\n- DNI\n- Fecha de nacimiento\n- Dirección de la vivienda\n- Tipo de vivienda (casa, depto, etc.)\n- Metros cuadrados\n- Valor aproximado de los bienes",
     
-    "response2": "🚨 Denuncia de siniestro\n\nPara iniciar la denuncia necesitamos:\n- Nombre y apellido del asegurado\n- DNI\n- Nº de póliza\n- Patente (si aplica)\n- Fecha y lugar del siniestro\n- Breve descripción de lo ocurrido\n\n👉 Podés adjuntar fotos o documentación del hecho.",
+    "response2": "🚨 Denuncia de siniestro\n\nPara iniciar la denuncia necesitamos:\n- Nombre y apellido del asegurado\n- DNI\n- Nº de póliza\n- Patente (si aplica)\n- Fecha y lugar del siniestro\n- Breve descripción de lo ocurrido.",
     
     "response3": "📄 Solicitud de póliza o cupón\n\n1️⃣ Descargar Póliza 📑\n2️⃣ Descargar Cupón de Pago 💳\n\n👉 Escribí 1️⃣ o 2️⃣ para continuar.",
     "response3_1": "📑 Para enviarte la póliza necesitamos:\n- Nº de póliza\n- Nombre y apellido del titular\n- DNI",
