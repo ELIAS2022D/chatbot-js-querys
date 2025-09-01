@@ -15,7 +15,6 @@ const validateForm = (session, rawText, message) => {
     waitingDataPoliza: hasMinLines(rawText, 2),      // póliza + Nombre/DNI
     waitingDataGenerico: hasMinLines(rawText, 2),    // genérico
     waitingDataCotizacion: hasMinLines(rawText, 4),  // auto/moto/hogar: 4+ líneas
-    waitingDataGruaDatos: hasMinLines(rawText, 5),   // datos grúa: 5 líneas
     waitingDataUbicacion: !!(
       message.location &&
       message.location.latitude &&
@@ -26,6 +25,16 @@ const validateForm = (session, rawText, message) => {
 };
 
 const handleMessage = async (message, clientId, config) => {
+  // --- Verificar antigüedad del mensaje ---
+  const msgTimestamp = message.timestamp * 1000; // convertir a milisegundos
+  const now = Date.now();
+  const diffMinutes = (now - msgTimestamp) / 1000 / 60;
+
+  if (diffMinutes > 10) {
+    console.log("Mensaje viejo:", diffMinutes.toFixed(1), "minutos");
+    return; // no responde
+  }
+
   const texto = message.body.trim().toLowerCase();
   const menu = config.menu;
   const keywords = config.keywords || {};
@@ -72,13 +81,14 @@ const handleMessage = async (message, clientId, config) => {
       case "5":
       case "grua":
       case "grúa":
-        sessions[userId] = "waitingDataGruaDatos";
+        sessions[userId] = "waitingDataDatosGrua";
         return message.reply(
-          "🚗 Pedido de grúa\n\nEnviá los datos (una línea por ítem):\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino al que debe trasladarse\n- Teléfono de contacto"
+          "🚗 Pedido de grúa\n\nEnviá los datos:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino al que debe trasladarse\n- Teléfono de contacto"
         );
 
       case "6":
-      case "otras":
+      case "consultas":
+      case "consulta":
         sessions[userId] = "directResponse";
         return message.reply(menu.response6);
 
@@ -159,25 +169,19 @@ const handleMessage = async (message, clientId, config) => {
 
   // ---- CAPTURA DE DATOS ----
   if (currentSession?.startsWith("waitingData")) {
-    if (!validateForm(currentSession, message.body, message)) {
-      if (currentSession === "waitingDataGruaDatos") {
-        return message.reply("⚠️ Por favor, completá todos los datos solicitados:\nNombre y apellido\nNº de póliza\nPatente\nDestino\nTeléfono de contacto");
+    if (currentSession === "waitingDataDatosGrua") {
+      if (!hasMinLines(message.body, 5)) {
+        return message.reply("⚠️ Por favor, envíe todos los datos solicitados (5 líneas).");
       }
+      sessions[userId] = "waitingDataUbicacion";
+      return message.reply("📍 Ahora envíe su ubicación en WhatsApp.");
+    }
+
+    if (!validateForm(currentSession, message.body, message)) {
       if (currentSession === "waitingDataUbicacion") {
         return message.reply("⚠️ Por favor, envíe su ubicación 📍 desde WhatsApp.");
       }
       return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.");
-    }
-
-    // Flujo especial para grúa
-    if (currentSession === "waitingDataGruaDatos") {
-      sessions[userId] = "waitingDataUbicacion";
-      return message.reply("✅ Datos recibidos.\n\nAhora enviá tu ubicación 📍 desde WhatsApp.");
-    }
-
-    if (currentSession === "waitingDataUbicacion") {
-      sessions[userId] = null;
-      return message.reply("✅ Recibido, en instantes tendrá su respuesta.");
     }
 
     sessions[userId] = null;
