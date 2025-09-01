@@ -11,15 +11,21 @@ const includesAny = (text, arr) =>
 
 // Validación de formularios según la opción
 const validateForm = (session, rawText, message) => {
+  const isWhatsAppLocation =
+    message.location &&
+    message.location.latitude &&
+    message.location.longitude;
+
+  const isPhoto =
+    message.hasMedia || message.type === "image";
+
   const ok = {
     waitingDataPoliza: hasMinLines(rawText, 2),      // póliza + Nombre/DNI
     waitingDataGenerico: hasMinLines(rawText, 2),    // genérico
     waitingDataCotizacion: hasMinLines(rawText, 4),  // auto/moto/hogar: 4+ líneas
-    waitingDataUbicacion: !!(
-      message.location &&
-      message.location.latitude &&
-      message.location.longitude
-    ), // SOLO ubicación de WhatsApp
+    waitingDataUbicacion: !!isWhatsAppLocation,      // SOLO ubicación de WhatsApp
+    waitingDataDenuncia: hasMinLines(rawText, 2),    // datos mínimos (antes de fotos)
+    waitingFotos: !!isPhoto,                         // fotos de denuncia
   };
   return ok[session] ?? false;
 };
@@ -35,7 +41,7 @@ const handleMessage = async (message, clientId, config) => {
     return; // no responde
   }
 
-  const texto = message.body.trim().toLowerCase();
+  const texto = (message.body || "").trim().toLowerCase();
   const menu = config.menu;
   const keywords = config.keywords || {};
   const userId = message.from;
@@ -61,8 +67,11 @@ const handleMessage = async (message, clientId, config) => {
 
       case "2":
       case "denunciar":
-        sessions[userId] = "waitingDataGenerico";
-        return message.reply(menu.response2);
+        sessions[userId] = "waitingDataDenuncia";
+        return message.reply(
+          (menu.response2 || "🚨 Denuncia de siniestro") +
+          "\n\n✍️ Por favor, envíe todos los datos solicitados ⚠️"
+        );
 
       case "3":
       case "poliza":
@@ -167,8 +176,11 @@ const handleMessage = async (message, clientId, config) => {
     return message.reply("✅ Recibida su respuesta.");
   }
 
-  // ---- CAPTURA DE DATOS ----
-  if (currentSession?.startsWith("waitingData")) {
+  // ---- CAPTURA DE DATOS + FOTOS + UBICACIÓN ----
+  // Abarca: waitingData*, waitingFotos
+  if (currentSession?.startsWith?.("waitingData") || currentSession === "waitingFotos") {
+
+    // 🚗 Pedido de grúa: primero datos, luego ubicación
     if (currentSession === "waitingDataDatosGrua") {
       if (!hasMinLines(message.body, 5)) {
         return message.reply("⚠️ Por favor, envíe todos los datos solicitados (5 líneas).");
@@ -177,10 +189,56 @@ const handleMessage = async (message, clientId, config) => {
       return message.reply("📍 Ahora envíe su ubicación en WhatsApp.");
     }
 
-    if (!validateForm(currentSession, message.body, message)) {
-      if (currentSession === "waitingDataUbicacion") {
+    // 📍 Ubicación para grúa
+    if (currentSession === "waitingDataUbicacion") {
+      if (!validateForm("waitingDataUbicacion", message.body, message)) {
         return message.reply("⚠️ Por favor, envíe su ubicación 📍 desde WhatsApp.");
       }
+      sessions[userId] = null;
+      return message.reply("✅ Ubicación recibida, en instantes tendrá su respuesta.");
+    }
+
+    // 🚨 Denuncia de siniestro: datos primero → recibido → luego fotos
+    if (currentSession === "waitingDataDenuncia") {
+      if (!validateForm("waitingDataDenuncia", message.body, message)) {
+        return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.");
+      }
+      sessions[userId] = "waitingFotos";
+      sessions[userId + "_fotos"] = [];
+      return message.reply("✅ Recibido.\n\n📷 Ahora enviá hasta 5 fotos del daño (una por mensaje). Escribí *listo* cuando termines.");
+    }
+
+    // 📸 Captura de fotos (máx. 5) para denuncia
+    if (currentSession === "waitingFotos") {
+      // Permitir finalizar sin adjuntar una foto en este mensaje
+      if (!message.hasMedia && message.type !== "image") {
+        if (texto === "listo") {
+          sessions[userId] = null;
+          delete sessions[userId + "_fotos"];
+          return message.reply("✅ Recibidas las fotos. En instantes tendrás tu respuesta.");
+        }
+        return message.reply("⚠️ Enviá una foto 📷 o escribí 'listo' para terminar.");
+      }
+
+      // Guardar referencia de la foto (si querés, acá podés descargarla con await message.downloadMedia())
+      if (!sessions[userId + "_fotos"]) {
+        sessions[userId + "_fotos"] = [];
+      }
+      sessions[userId + "_fotos"].push({ hasMedia: true, ts: Date.now() });
+
+      if (sessions[userId + "_fotos"].length >= 5) {
+        sessions[userId] = null;
+        delete sessions[userId + "_fotos"];
+        return message.reply("✅ Recibidas todas las fotos. En instantes tendrás tu respuesta.");
+      }
+
+      return message.reply(
+        `📸 Foto recibida (${sessions[userId + "_fotos"].length}/5). Podés enviar más o escribir "listo" para terminar.`
+      );
+    }
+
+    // Resto de formularios
+    if (!validateForm(currentSession, message.body, message)) {
       return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.");
     }
 
