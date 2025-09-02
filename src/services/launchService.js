@@ -8,6 +8,7 @@ import { handleMessage } from "../handlers/messageHandler.js";
 const { Client, LocalAuth } = pkg;
 
 const initializeService = () => {
+  //Trae todos los clientes de nuestro sistema
   const clientsConfig = getClients();
 
   Object.entries(clientsConfig).forEach(([clientId, config]) => {
