@@ -1,14 +1,18 @@
-import { existUserSession, createUserSession } from "../services/usersSessionsService.js";
+import { getSession } from "../services/sessionsService.js";
+import { hasBeenLongEnough } from "../utils/hasBeenLongEnough.js"
 
 const handleMessage = async (message, clientId, config) => {
   const texto = message.body.toLowerCase();
   const keywords = config.keywords;
   const menu = config.menu;
 
-  //Si todavía no se creó el user session significa que es la primera vez que habla
-  // clientId = client1, etc
-  if (!existUserSession(message, clientId)) {
-    createUserSession(message, clientId);
+  const session = await getSession(message, clientId);
+  
+  // console.log(JSON.stringify(session, null, 2)); // Para ver el formato de los datos
+
+  //Reviso si pasó mas de 1 hora desde el ultimo mensaje
+  if (hasBeenLongEnough(session.lastMessage, 0.05)){
+    return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`)
   }
   //Necesitamos guardar y evaluar la hora del ultimo mensaje para saber si hay que mandarle el menú o simplemente devolverle el default
   //Lo mejor sería no tener que depender de un menu configurado de forma estática sino generar menú de forma flexible según la cantidad de menus y mensajes disponibles por clientes
