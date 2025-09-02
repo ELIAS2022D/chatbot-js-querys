@@ -109,7 +109,9 @@ const handleMessage = async (message, clientId, config) => {
       default:
         for (const [responseKey, list] of Object.entries(keywords)) {
           if (list.some(kw => texto.includes(kw))) {
-            return message.reply("Creo que te refieres a esto: \n" + menu[responseKey]);
+          // solo traigo la primera línea (el título)
+          const titulo = menu[responseKey]?.split("\n")[0] || menu[responseKey];
+          return message.reply("Escribe el número de la opción del menú y pide: \n" + titulo);
           }
         }
         return message.reply(menu.default);
@@ -123,19 +125,19 @@ const handleMessage = async (message, clientId, config) => {
         sessions[userId] = "waitingDataCotizacion";
         return message.reply(
           (menu.response1_1 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nDNI\nMarca/Modelo/Año\nPatente"
+          "\n\n✍️ Enviá los datos (una línea por ítem)"
         );
       case "2":
         sessions[userId] = "waitingDataCotizacion";
         return message.reply(
           (menu.response1_2 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nDNI\nMarca/Modelo/Año\nCilindrada"
+          "\n\n✍️ Enviá los datos (una línea por ítem)"
         );
       case "3":
         sessions[userId] = "waitingDataCotizacion";
         return message.reply(
           (menu.response1_3 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem):\nNombre y apellido\nDirección\nTipo de vivienda\nMetros cuadrados/Valor contenido"
+          "\n\n✍️ Enviá los datos (una línea por ítem)"
         );
       default:
         return message.reply(menu.default);
