@@ -4,7 +4,7 @@
     "menu": {
     "welcome": "🤝 ¡Bienvenido/a a Organizar - Broker de Seguros👨‍💼! \n\nElegí una opción:\n\n1️⃣ Cotización 💵\n2️⃣ Denunciar siniestro 🚨\n3️⃣ Solicitar póliza o cupón 📄\n4️⃣ Pedir anulación ❌\n5️⃣ Pedir grúa 🚗\n6️⃣ Otras consultas ❓\n7️⃣ Hablar con un asesor 👨‍💼\n\n✏ Escribí el número o palabra clave de la opción.",
     
-    "response1": "💵 Para cotizar necesitamos que elijas:\n\n1️⃣ Cotizar Auto 🚗\n2️⃣ Cotizar Moto 🏍\n3️⃣ Cotizar Hogar 🏠\n\n👉 Escribí el número de la opción.",
+    "response1": "💵 Cotización:\n\n1️⃣ Cotizar Auto 🚗\n2️⃣ Cotizar Moto 🏍\n3️⃣ Cotizar Hogar 🏠\n\n👉 Escribí el número de la opción.",
     "response1_1": "🚗 Cotización de Auto\n\nPor favor enviá estos datos:\n- Nombre y apellido del titular\n- DNI\n- Marca/Modelo/Año\n- Patente\n- Fecha de nacimiento\n- Localidad",
     "response1_2": "🏍 Cotización de Moto\n\nNecesitamos:\n- Nombre y apellido del titular\n- DNI\n- Marca/Modelo/Año\n- Cilindrada\n- Patente\n- Fecha de nacimiento\n- Localidad",
     "response1_3": "🏠 Cotización de Hogar\n\nEnviá estos datos:\n- Nombre y apellido del titular\n- DNI\n- Fecha de nacimiento\n- Dirección de la vivienda\n- Tipo de vivienda (casa, depto, etc.)\n- Metros cuadrados\n- Valor aproximado de los bienes",
@@ -39,18 +39,18 @@
         "2"
       ],
       "response3": [
-        "anulacion",
-        "anular",
+        "poliza",
+        "cupon de pago",
         "3"
       ],
       "response4": [
-        "grua",
-        "asistencia",
+        "anulacion",
+        "anular",
         "4"
       ],
       "response5": [
-        "poliza",
-        "cupon de pago",
+        "grua",
+        "asistencia",
         "5"
       ],
       "response6": [
