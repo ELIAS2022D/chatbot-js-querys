@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import { fileURLToPath } from "url";
-import { formatCellphoneNumber } from "../utils/formatCellphone.js";
+import { formatCellphoneNumber, fileExists } from "../utils/toolkit.js";
 import path from "path";
 
 // 🔍 RUTAS ------------------------------------
@@ -10,17 +10,6 @@ const getSessionFilePath = (clientName) =>
   path.join(__dirname, "..", "data", "sessions", `${clientName}.json`);
 
 // 📂 MANEJO DE ARCHIVOS -----------------------
-// Verifica si el archivo existe
-const fileExists = async (filePath) => {
-  try {
-    await fs.access(filePath);
-    console.log("Existe el archivo");
-    return true;
-  } catch {
-    console.log("No existe el archivo");
-    return false;
-  }
-};
 // Crea el archivo con estructura inicial
 const createClientSessionFile = async (clientName) => {
   const filePath = getSessionFilePath(clientName);
@@ -44,21 +33,21 @@ const userExist = (data, cellphone) =>
 // Guarda el último mensaje
 const saveLastMessage = async (filePath, data, message) => {
   const cellphone = formatCellphoneNumber(message.from);
-  const today = new Date().toISOString();
-
+  const timeNow = Date.now();
   const user = data.users.find((u) => u.phone === cellphone);
-  user.lastMessage = today;
+  
+  user.lastMessage = timeNow;
   console.log(`Guardando el ultimo mensaje al usuario: ${user}`);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 };
 // Crea una nueva sesión de usuario
 const createUserSession = async (filePath, data, message) => {
   const cellphone = formatCellphoneNumber(message.from);
-  const today = new Date().toISOString();
+  const timeNow = new Date.now();
 
   const newUser = {
     phone: cellphone,
-    lastMessage: today,
+    lastMessage: timeNow,
   };
 
   data.users.push(newUser);

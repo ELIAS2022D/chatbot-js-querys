@@ -14,6 +14,7 @@ const handleMessage = async (message, clientId, config) => {
   if (hasBeenLongEnough(session.lastMessage, 0.05)){
     return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`)
   }
+  
   //Necesitamos guardar y evaluar la hora del ultimo mensaje para saber si hay que mandarle el menú o simplemente devolverle el default
   //Lo mejor sería no tener que depender de un menu configurado de forma estática sino generar menú de forma flexible según la cantidad de menus y mensajes disponibles por clientes
 
