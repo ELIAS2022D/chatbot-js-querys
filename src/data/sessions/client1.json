@@ -1,14 +1,18 @@
-[
-  {
-    "phone": "5492262513045",
-    "dni": "41314626",
-    "name": "Ezequias Herrera",
-    "age": "26"
-  },
-  {
-    "phone": "5491131433906",
-    "dni": "40239581",
-    "name": "Elias Derrico",
-    "age": "26"
-  }
-]
+{
+  "users": [
+    {
+      "phone": "5492262513045",
+      "dni": "41314626",
+      "name": "Ezequias Herrera",
+      "age": "26",
+      "lastMessage": "2025-09-02T00:37:52.158Z"
+    },
+    {
+      "phone": "5491131433906",
+      "dni": "40239581",
+      "name": "Elias Derrico",
+      "age": "26",
+      "lastMessage": "2025-09-02T00:16:57.328Z"
+    }
+  ]
+}
