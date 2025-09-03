@@ -1,5 +1,5 @@
 import { getSession } from "../services/sessionsService.js";
-import { hasBeenLongEnough } from "../utils/hasBeenLongEnough.js"
+import { hasBeenLongEnough } from "../utils/toolkit.js"
 
 const sessions = {}; // Estado de usuarios en memoria (submenús activos)
 

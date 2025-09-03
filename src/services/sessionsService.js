@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import { fileURLToPath } from "url";
-import { formatCellphoneNumber, fileExists } from "../utils/toolkit.js";
+import { formatCellphoneNumber } from "../utils/toolkit.js";
 import path from "path";
 
 // 🔍 RUTAS ------------------------------------
@@ -9,7 +9,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getSessionFilePath = (clientName) =>
   path.join(__dirname, "..", "data", "sessions", `${clientName}.json`);
 
+
 // 📂 MANEJO DE ARCHIVOS -----------------------
+// Verifica si el archivo existe
+const fileExists = async (filePath) => {
+  console.log("Estoy dentro de fileExists" + filePath);
+  try {
+    await fs.access(filePath);
+    console.log("Existe el archivo");
+    return true;
+  } catch {
+    console.log("No existe el archivo");
+    return false;
+  }
+};
+
 // Crea el archivo con estructura inicial
 const createClientSessionFile = async (clientName) => {
   const filePath = getSessionFilePath(clientName);
@@ -35,7 +49,7 @@ const saveLastMessage = async (filePath, data, message) => {
   const cellphone = formatCellphoneNumber(message.from);
   const timeNow = Date.now();
   const user = data.users.find((u) => u.phone === cellphone);
-  
+
   user.lastMessage = timeNow;
   console.log(`Guardando el ultimo mensaje al usuario: ${user}`);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
@@ -43,7 +57,7 @@ const saveLastMessage = async (filePath, data, message) => {
 // Crea una nueva sesión de usuario
 const createUserSession = async (filePath, data, message) => {
   const cellphone = formatCellphoneNumber(message.from);
-  const timeNow = new Date.now();
+  const timeNow = Date.now();
 
   const newUser = {
     phone: cellphone,
@@ -52,7 +66,6 @@ const createUserSession = async (filePath, data, message) => {
 
   data.users.push(newUser);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-  console.log(`El newUser contiene: ${newUser}`);
   return newUser;
 };
 
@@ -81,7 +94,7 @@ const getSession = async (message, clientId) => {
       console.log("El usuario NO existe. Creando session...")
       user = await createUserSession(filePath, data, message);
     }
-  
+
     // Retorno Session de Usuario
     return user;
   } catch (error) {
