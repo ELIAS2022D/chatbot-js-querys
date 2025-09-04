@@ -21,7 +21,7 @@
     
     "response6": "❓ Otras consultas\n\nPodés escribir libremente tu consulta y un asesor la responderá.",
     
-    "response7": "👨‍💼 Enseguida te derivamos con un asesor humano. Un momento por favor...",
+    "response7": "👨‍💼 Enseguida te derivamos con un asesor humano.\n\nEscribe la palabra 'Bot/bot' para pausar/reanudar el 🤖 y poder charlar tranquilamente con uno de nuestros asesores.\n\nAguarde...😁",
     
     "default": "⚠ No entendí tu respuesta. Por favor elegí una opción válida o escribí *menu* para volver al inicio."
   },

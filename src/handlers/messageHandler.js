@@ -1,5 +1,6 @@
 import { getSession } from "../services/sessionsService.js";
 import { hasBeenLongEnough } from "../utils/toolkit.js"
+import { togglePauseBot, isBotPaused } from "../services/botPauseService.js";
 
 const sessions = {}; // Estado de usuarios en memoria (submenús activos)
 
@@ -48,16 +49,27 @@ const handleMessage = async (message, clientId, config) => {
   const userId = message.from;
   
   const session = await getSession(message, clientId);
-  
-  // console.log(JSON.stringify(session, null, 2)); // Para ver el formato de los datos
 
+  // --- Pausar/Reanudar bot con palabra "bot" ---
+  if (texto === "bot") {
+  const paused = togglePauseBot(userId);
+  if (paused) {
+    return message.reply("⏸️ El bot fue pausado por un asesor. Ahora podés chatear libremente.");
+  } else {
+    return message.reply("▶️ El bot fue reactivado.");
+  }
+  }
+
+  // Si el bot está pausado, no responder
+  if (isBotPaused(userId)) {
+  console.log("Bot en pausa para:", userId);
+  return;
+  }
+  
   //Reviso si pasó mas de 1 hora desde el ultimo mensaje
   if (hasBeenLongEnough(session.lastMessage, 0.05)){
     return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`)
   }
-  
-  //Necesitamos guardar y evaluar la hora del ultimo mensaje para saber si hay que mandarle el menú o simplemente devolverle el default
-  //Lo mejor sería no tener que depender de un menu configurado de forma estática sino generar menú de forma flexible según la cantidad de menus y mensajes disponibles por clientes
 
   if (texto === "hola" || texto === "menu") {
     sessions[userId] = null;
@@ -118,9 +130,9 @@ const handleMessage = async (message, clientId, config) => {
       default:
         for (const [responseKey, list] of Object.entries(keywords)) {
           if (list.some(kw => texto.includes(kw))) {
-          // solo traigo la primera línea (el título)
-          const titulo = menu[responseKey]?.split("\n")[0] || menu[responseKey];
-          return message.reply("Escribe el número de la opción del menú y pide: \n" + titulo);
+            // solo traigo la primera línea (el título)
+            const titulo = menu[responseKey]?.split("\n")[0] || menu[responseKey];
+            return message.reply("Escribe el número de la opción del menú y pide: \n" + titulo);
           }
         }
         return message.reply(menu.default);
@@ -188,7 +200,6 @@ const handleMessage = async (message, clientId, config) => {
   }
 
   // ---- CAPTURA DE DATOS + FOTOS + UBICACIÓN ----
-  // Abarca: waitingData*, waitingFotos
   if (currentSession?.startsWith?.("waitingData") || currentSession === "waitingFotos") {
 
     // 🚗 Pedido de grúa: primero datos, luego ubicación
@@ -221,7 +232,6 @@ const handleMessage = async (message, clientId, config) => {
 
     // 📸 Captura de fotos (máx. 5) para denuncia
     if (currentSession === "waitingFotos") {
-      // Permitir finalizar sin adjuntar una foto en este mensaje
       if (!message.hasMedia && message.type !== "image") {
         if (texto === "listo") {
           sessions[userId] = null;
@@ -231,7 +241,6 @@ const handleMessage = async (message, clientId, config) => {
         return message.reply("⚠️ Enviá una foto 📷 o escribí 'listo' para terminar.");
       }
 
-      // Guardar referencia de la foto (si querés, acá podés descargarla con await message.downloadMedia())
       if (!sessions[userId + "_fotos"]) {
         sessions[userId + "_fotos"] = [];
       }
