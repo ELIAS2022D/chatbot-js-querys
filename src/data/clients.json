@@ -17,7 +17,7 @@
     
     "response4": "❌ Pedido de anulación\n\nPor favor indicá:\n- Nº de póliza a anular\n- Motivo de la anulación\n- Nombre y apellido del titular\n- DNI",
     
-    "response5": "🚗 Pedido de grúa\n\nEnviá los datos:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Ubicación exacta donde se encuentra el vehículo\n- Destino al que debe trasladarse\n- Teléfono de contacto",
+    "response5": "🚗 Pedido de grúa\n\nEnviá:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino\n- Teléfono",
     
     "response6": "❓ Otras consultas\n\nPodés escribir libremente tu consulta y un asesor la responderá.",
     

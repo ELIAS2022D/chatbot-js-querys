@@ -1,6 +1,7 @@
 import { getSession } from "../services/sessionsService.js";
-import { hasBeenLongEnough } from "../utils/toolkit.js"
+import { hasBeenLongEnough } from "../utils/toolkit.js";
 import { togglePauseBot, isBotPaused } from "../services/botPauseService.js";
+import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js";
 
 const sessions = {}; // Estado de usuarios en memoria (submenús activos)
 
@@ -22,53 +23,40 @@ const validateForm = (session, rawText, message) => {
     message.hasMedia || message.type === "image";
 
   const ok = {
-    waitingDataPoliza: hasMinLines(rawText, 2),      // póliza + Nombre/DNI
-    waitingDataGenerico: hasMinLines(rawText, 2),    // genérico
-    waitingDataCotizacion: hasMinLines(rawText, 4),  // auto/moto/hogar: 4+ líneas
-    waitingDataUbicacion: !!isWhatsAppLocation,      // SOLO ubicación de WhatsApp
-    waitingDataDenuncia: hasMinLines(rawText, 2),    // datos mínimos (antes de fotos)
-    waitingFotos: !!isPhoto,                         // fotos de denuncia
+    waitingDataPoliza: hasMinLines(rawText, 2),
+    waitingDataGenerico: hasMinLines(rawText, 2),
+    waitingDataCotizacion: hasMinLines(rawText, 4),
+    waitingDataUbicacion: !!isWhatsAppLocation,
+    waitingDataDenuncia: hasMinLines(rawText, 2),
+    waitingFotos: !!isPhoto,
   };
   return ok[session] ?? false;
 };
 
 const handleMessage = async (message, clientId, config) => {
-  // --- Verificar antigüedad del mensaje ---
-  const msgTimestamp = message.timestamp * 1000; // convertir a milisegundos
+  const msgTimestamp = message.timestamp * 1000;
   const now = Date.now();
   const diffMinutes = (now - msgTimestamp) / 1000 / 60;
-
-  if (diffMinutes > 10) {
-    console.log("Mensaje viejo:", diffMinutes.toFixed(1), "minutos");
-    return; // no responde
-  }
+  if (diffMinutes > 10) return;
 
   const texto = (message.body || "").trim().toLowerCase();
   const menu = config.menu;
   const keywords = config.keywords || {};
   const userId = message.from;
-  
   const session = await getSession(message, clientId);
 
-  // --- Pausar/Reanudar bot con palabra "bot" ---
+  // --- Pausar/Reanudar bot ---
   if (texto === "bot") {
-  const paused = togglePauseBot(userId);
-  if (paused) {
-    return message.reply("⏸️ El bot fue pausado por un asesor. Ahora podés chatear libremente.");
-  } else {
-    return message.reply("▶️ El bot fue reactivado.");
+    const paused = togglePauseBot(userId);
+    return paused
+      ? message.reply("⏸️ El bot fue pausado. Ahora podés chatear con un asesor.")
+      : message.reply("▶️ El bot fue reactivado.");
   }
-  }
+  if (isBotPaused(userId)) return;
 
-  // Si el bot está pausado, no responder
-  if (isBotPaused(userId)) {
-  console.log("Bot en pausa para:", userId);
-  return;
-  }
-  
-  //Reviso si pasó mas de 1 hora desde el ultimo mensaje
-  if (hasBeenLongEnough(session.lastMessage, 0.05)){
-    return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`)
+  // --- Bienvenida si pasó mucho tiempo ---
+  if (hasBeenLongEnough(session.lastMessage, 0.05)) {
+    return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`);
   }
 
   if (texto === "hola" || texto === "menu") {
@@ -89,10 +77,7 @@ const handleMessage = async (message, clientId, config) => {
       case "2":
       case "denunciar":
         sessions[userId] = "waitingDataDenuncia";
-        return message.reply(
-          (menu.response2 || "🚨 Denuncia de siniestro") +
-          "\n\n✍️ Por favor, envíe todos los datos solicitados ⚠️"
-        );
+        return message.reply((menu.response2 || "🚨 Denuncia de siniestro") + "\n\n✍️ Enviá los datos solicitados ⚠️");
 
       case "3":
       case "poliza":
@@ -112,27 +97,21 @@ const handleMessage = async (message, clientId, config) => {
       case "grua":
       case "grúa":
         sessions[userId] = "waitingDataDatosGrua";
-        return message.reply(
-          "🚗 Pedido de grúa\n\nEnviá los datos:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino al que debe trasladarse\n- Teléfono de contacto"
-        );
-
+        return message.reply("🚗 Pedido de grúa\n\nEnviá:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino\n- Teléfono");
+        
       case "6":
-      case "consultas":
-      case "consulta":
         sessions[userId] = "directResponse";
         return message.reply(menu.response6);
 
       case "7":
-      case "asesor":
         sessions[userId] = "directResponse";
         return message.reply(menu.response7);
 
       default:
         for (const [responseKey, list] of Object.entries(keywords)) {
           if (list.some(kw => texto.includes(kw))) {
-            // solo traigo la primera línea (el título)
             const titulo = menu[responseKey]?.split("\n")[0] || menu[responseKey];
-            return message.reply("Escribe el número de la opción del menú y pide: \n" + titulo);
+            return message.reply("Escribe el número de la opción del menú: \n" + titulo);
           }
         }
         return message.reply(menu.default);
@@ -143,127 +122,102 @@ const handleMessage = async (message, clientId, config) => {
   if (currentSession === "1") {
     switch (texto) {
       case "1":
-        sessions[userId] = "waitingDataCotizacion";
-        return message.reply(
-          (menu.response1_1 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem)"
-        );
       case "2":
-        sessions[userId] = "waitingDataCotizacion";
-        return message.reply(
-          (menu.response1_2 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem)"
-        );
       case "3":
         sessions[userId] = "waitingDataCotizacion";
-        return message.reply(
-          (menu.response1_3 || "") +
-          "\n\n✍️ Enviá los datos (una línea por ítem)"
-        );
+        return message.reply((menu[`response1_${texto}`] || "") + "\n\n✍️ Enviá los datos (una línea por ítem)");
       default:
         return message.reply(menu.default);
     }
   }
 
-  // ---- SUBMENÚ PÓLIZA/CUPÓN (3) ----
+  // ---- SUBMENÚ PÓLIZA (3) ----
   if (currentSession === "3") {
     if (texto === "1" || includesAny(texto, ["poliza", "póliza"])) {
       sessions[userId] = "waitingDataPoliza";
-      return message.reply(
-        (menu.response3_1 || "📑 Para póliza, enviá:") +
-        "\n\n✍️ Formato (una línea por ítem):\nN° de póliza\nNombre\nDNI"
-      );
+      return message.reply((menu.response3_1 || "📑 Para póliza:") + "\n\nN° póliza\nNombre\nDNI");
     }
-    if (texto === "2" || includesAny(texto, ["cupon", "cupón", "comprobante"])) {
+    if (texto === "2" || includesAny(texto, ["cupon", "cupón"])) {
       sessions[userId] = "waitingDataPoliza";
-      return message.reply(
-        (menu.response3_2 || "💳 Para cupón, enviá:") +
-        "\n\n✍️ Formato (una línea por ítem):\nN° de póliza\nNombre\nDNI"
-      );
+      return message.reply((menu.response3_2 || "💳 Para cupón:") + "\n\nN° póliza\nNombre\nDNI");
     }
-
     if (hasMinLines(message.body, 2)) {
       if (!validateForm("waitingDataPoliza", message.body, message)) {
-        return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.\n\nEjemplo:\n123456789\nJuan Pérez - 12345678");
+        return message.reply("⚠️ Datos inválidos. Ejemplo:\n123456789\nJuan Pérez - 12345678");
       }
       sessions[userId] = null;
       return message.reply("✅ Recibido, en instantes tendrá su respuesta.");
     }
-
     return message.reply(menu.default);
   }
 
-  // ---- OPCIONES 6 y 7 (RESPUESTA DIRECTA) ----
+  // ---- RESPUESTAS DIRECTAS ----
   if (currentSession === "directResponse") {
     sessions[userId] = null;
-    return message.reply("✅ Recibida su respuesta.");
+    return message.reply("✅ Recibida su consulta.");
   }
 
-  // ---- CAPTURA DE DATOS + FOTOS + UBICACIÓN ----
-  if (currentSession?.startsWith?.("waitingData") || currentSession === "waitingFotos") {
-
-    // 🚗 Pedido de grúa: primero datos, luego ubicación
-    if (currentSession === "waitingDataDatosGrua") {
-      if (!hasMinLines(message.body, 5)) {
-        return message.reply("⚠️ Por favor, envíe todos los datos solicitados (5 líneas).");
-      }
-      sessions[userId] = "waitingDataUbicacion";
-      return message.reply("📍 Ahora envíe su ubicación en WhatsApp.");
+  // ---- CAPTURA DE FORMULARIOS ----
+  if (currentSession === "waitingDataCotizacion") {
+    if (!validateForm("waitingDataCotizacion", message.body, message)) {
+      return message.reply("⚠️ Enviá los datos en el formato correcto (4 líneas mín).");
     }
-
-    // 📍 Ubicación para grúa
-    if (currentSession === "waitingDataUbicacion") {
-      if (!validateForm("waitingDataUbicacion", message.body, message)) {
-        return message.reply("⚠️ Por favor, envíe su ubicación 📍 desde WhatsApp.");
-      }
+    try {
+      const token = await getProvinciaToken();
+      const cotizacion = await cotizarVehiculo(token, {}); // TODO: mapear message.body a objeto
       sessions[userId] = null;
-      return message.reply("✅ Ubicación recibida, en instantes tendrá su respuesta.");
+      return message.reply("✅ Cotización generada:\n" + JSON.stringify(cotizacion, null, 2));
+    } catch (err) {
+      console.error("❌ Error en cotización:", err.message);
+      return message.reply("⚠️ No se pudo generar la cotización en este momento.");
     }
+  }
 
-    // 🚨 Denuncia de siniestro: datos primero → recibido → luego fotos
-    if (currentSession === "waitingDataDenuncia") {
-      if (!validateForm("waitingDataDenuncia", message.body, message)) {
-        return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.");
-      }
-      sessions[userId] = "waitingFotos";
-      sessions[userId + "_fotos"] = [];
-      return message.reply("✅ Recibido.\n\n📷 Ahora enviá hasta 5 fotos del daño (una por mensaje). Escribí *listo* cuando termines.");
+  // ---- CAPTURA DE DATOS PARA GRÚA ----
+  if (currentSession === "waitingDataDatosGrua") {
+    if (!hasMinLines(message.body, 5)) {
+      return message.reply("⚠️ Enviá todos los datos (5 líneas).");
     }
+    sessions[userId] = "waitingDataUbicacion";
+    return message.reply("📍 Ahora envía tu ubicación desde WhatsApp.");
+  }
 
-    // 📸 Captura de fotos (máx. 5) para denuncia
-    if (currentSession === "waitingFotos") {
-      if (!message.hasMedia && message.type !== "image") {
-        if (texto === "listo") {
-          sessions[userId] = null;
-          delete sessions[userId + "_fotos"];
-          return message.reply("✅ Recibidas las fotos. En instantes tendrás tu respuesta.");
-        }
-        return message.reply("⚠️ Enviá una foto 📷 o escribí 'listo' para terminar.");
-      }
+  if (currentSession === "waitingDataUbicacion") {
+    if (!validateForm("waitingDataUbicacion", message.body, message)) {
+      return message.reply("⚠️ Enviá tu ubicación desde WhatsApp.");
+    }
+    sessions[userId] = null;
+    return message.reply("✅ Ubicación recibida, en instantes tendrá tu respuesta.");
+  }
 
-      if (!sessions[userId + "_fotos"]) {
-        sessions[userId + "_fotos"] = [];
-      }
-      sessions[userId + "_fotos"].push({ hasMedia: true, ts: Date.now() });
+  // ---- DENUNCIA ----
+  if (currentSession === "waitingDataDenuncia") {
+    if (!validateForm("waitingDataDenuncia", message.body, message)) {
+      return message.reply("⚠️ Datos incompletos. Reintentá.");
+    }
+    sessions[userId] = "waitingFotos";
+    sessions[userId + "_fotos"] = [];
+    return message.reply("✅ Recibido.\n📷 Ahora enviá hasta 5 fotos del daño. Escribí *listo* al terminar.");
+  }
 
-      if (sessions[userId + "_fotos"].length >= 5) {
+  if (currentSession === "waitingFotos") {
+    if (!message.hasMedia && message.type !== "image") {
+      if (texto === "listo") {
         sessions[userId] = null;
         delete sessions[userId + "_fotos"];
-        return message.reply("✅ Recibidas todas las fotos. En instantes tendrás tu respuesta.");
+        return message.reply("✅ Fotos recibidas. En instantes tendrás tu respuesta.");
       }
-
-      return message.reply(
-        `📸 Foto recibida (${sessions[userId + "_fotos"].length}/5). Podés enviar más o escribir "listo" para terminar.`
-      );
+      return message.reply("⚠️ Enviá una foto 📷 o escribí *listo*.");
     }
+    if (!sessions[userId + "_fotos"]) sessions[userId + "_fotos"] = [];
+    sessions[userId + "_fotos"].push({ hasMedia: true, ts: Date.now() });
 
-    // Resto de formularios
-    if (!validateForm(currentSession, message.body, message)) {
-      return message.reply("⚠️ Por favor, envíe los datos en el formato correcto.");
+    if (sessions[userId + "_fotos"].length >= 5) {
+      sessions[userId] = null;
+      delete sessions[userId + "_fotos"];
+      return message.reply("✅ Recibidas todas las fotos.");
     }
-
-    sessions[userId] = null;
-    return message.reply("✅ Recibido, en instantes tendrá su respuesta.");
+    return message.reply(`📸 Foto recibida (${sessions[userId + "_fotos"].length}/5). Podés enviar más o escribir *listo*.`);
   }
 
   return message.reply(menu.default);
