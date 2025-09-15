@@ -1,7 +1,7 @@
 import { getSession } from "../services/sessionsService.js";
 import { hasBeenLongEnough } from "../utils/toolkit.js";
 import { togglePauseBot, isBotPaused } from "../services/botPauseService.js";
-import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js";
+import { getProvinciaToken, cotizarVehiculoConDatos } from "../cotizaciones/provinciaService.js";
 
 const sessions = {}; // Estado de usuarios en memoria (submenús activos)
 
@@ -12,7 +12,6 @@ const hasMinLines = (text, n) =>
 const includesAny = (text, arr) =>
   arr.some(k => text.includes(k));
 
-// Validación de formularios según la opción
 const validateForm = (session, rawText, message) => {
   const isWhatsAppLocation =
     message.location &&
@@ -25,7 +24,7 @@ const validateForm = (session, rawText, message) => {
   const ok = {
     waitingDataPoliza: hasMinLines(rawText, 2),
     waitingDataGenerico: hasMinLines(rawText, 2),
-    waitingDataCotizacion: hasMinLines(rawText, 4),
+    waitingDataCotizacion: hasMinLines(rawText, 6), // ahora requerimos 6 líneas en un solo mensaje
     waitingDataUbicacion: !!isWhatsAppLocation,
     waitingDataDenuncia: hasMinLines(rawText, 2),
     waitingFotos: !!isPhoto,
@@ -71,8 +70,17 @@ const handleMessage = async (message, clientId, config) => {
     switch (texto) {
       case "1":
       case "cotizacion":
-        sessions[userId] = "1";
-        return message.reply(menu.response1);
+        sessions[userId] = "waitingDataCotizacion"; 
+        return message.reply(
+          "🚗🏍 Cotización de Vehículo\n\n" +
+          "Por favor enviá un solo mensaje con estos 6 datos, **cada uno en una línea**:\n" +
+          "1. Nombre y apellido del titular\n" +
+          "2. DNI\n" +
+          "3. Marca/Modelo/Año\n" +
+          "4. Patente\n" +
+          "5. Fecha de nacimiento\n" +
+          "6. Localidad"
+        );
 
       case "2":
       case "denunciar":
@@ -98,7 +106,7 @@ const handleMessage = async (message, clientId, config) => {
       case "grúa":
         sessions[userId] = "waitingDataDatosGrua";
         return message.reply("🚗 Pedido de grúa\n\nEnviá:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino\n- Teléfono");
-        
+
       case "6":
         sessions[userId] = "directResponse";
         return message.reply(menu.response6);
@@ -114,19 +122,6 @@ const handleMessage = async (message, clientId, config) => {
             return message.reply("Escribe el número de la opción del menú: \n" + titulo);
           }
         }
-        return message.reply(menu.default);
-    }
-  }
-
-  // ---- SUBMENÚ COTIZACIÓN (1) ----
-  if (currentSession === "1") {
-    switch (texto) {
-      case "1":
-      case "2":
-      case "3":
-        sessions[userId] = "waitingDataCotizacion";
-        return message.reply((menu[`response1_${texto}`] || "") + "\n\n✍️ Enviá los datos (una línea por ítem)");
-      default:
         return message.reply(menu.default);
     }
   }
@@ -157,19 +152,37 @@ const handleMessage = async (message, clientId, config) => {
     return message.reply("✅ Recibida su consulta.");
   }
 
-  // ---- CAPTURA DE FORMULARIOS ----
+  // ---- CAPTURA DE FORMULARIOS COTIZACIÓN (6 datos en un solo mensaje) ----
   if (currentSession === "waitingDataCotizacion") {
     if (!validateForm("waitingDataCotizacion", message.body, message)) {
-      return message.reply("⚠️ Enviá los datos en el formato correcto (4 líneas mín).");
+      return message.reply("⚠️ Por favor enviá los 6 datos en **un solo mensaje**, cada uno en una línea.");
     }
+
+    const formLines = message.body.split("\n").map(l => l.trim());
+
     try {
       const token = await getProvinciaToken();
-      const cotizacion = await cotizarVehiculo(token, {}); // TODO: mapear message.body a objeto
+      const cotizacion = await cotizarVehiculoConDatos(token, formLines);
+
+      let textoRespuesta = "📄 Cotización recibida:\n\n";
+      if (cotizacion?.cotizaciones?.length > 0) {
+        cotizacion.cotizaciones.forEach((c, i) => {
+          textoRespuesta += `🔹 Opción ${i + 1}\n`;
+          textoRespuesta += `Cobertura: ${c.cobertura || "N/A"}\n`;
+          textoRespuesta += `Premio: $${c.premio || "0"}\n\n`;
+        });
+      } else {
+        textoRespuesta += "⚠️ No se encontraron planes disponibles.\n";
+      }
+
       sessions[userId] = null;
-      return message.reply("✅ Cotización generada:\n" + JSON.stringify(cotizacion, null, 2));
+
+      return message.reply(textoRespuesta);
+
     } catch (err) {
       console.error("❌ Error en cotización:", err.message);
-      return message.reply("⚠️ No se pudo generar la cotización en este momento.");
+      sessions[userId] = null;
+      return message.reply("⚠️ No se pudo generar la cotización en este momento. Intentalo más tarde.");
     }
   }
 
@@ -205,7 +218,7 @@ const handleMessage = async (message, clientId, config) => {
       if (texto === "listo") {
         sessions[userId] = null;
         delete sessions[userId + "_fotos"];
-        return message.reply("✅ Fotos recibidas. En instantes tendrás tu respuesta.");
+        return message.reply("✅ Fotos recibidas. En instantes tendrás su respuesta.");
       }
       return message.reply("⚠️ Enviá una foto 📷 o escribí *listo*.");
     }
