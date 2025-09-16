@@ -1,64 +1,44 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const provinciaAuthUrl = "https://authp.provinciaseguros.com.ar/auth/realms/ps/protocol/openid-connect/token";
-const provinciaApiUrl = "https://apimprod.provinciaseguros.com.ar/PS/PS-COTIZACION/2.2/cotizar";
-const provinciaApiKey = process.env.PROVINCIA_API_KEY;
-const provinciaClientId = process.env.PROVINCIA_CLIENT_ID;
-const provinciaClientSecret = process.env.PROVINCIA_CLIENT_SECRET;
-const provinciaUsername = process.env.PROVINCIA_USERNAME;
-const provinciaPassword = process.env.PROVINCIA_PASSWORD;
+const getProvinciaToken = async () => {
+  const url = "https://authp.provinciaseguros.com.ar/auth/realms/ps/protocol/openid-connect/token";
 
-// 🔑 Obtener token con logging completo
-export async function getProvinciaToken() {
-  try {
-    const bodyParams = new URLSearchParams({
-      client_id: provinciaClientId,
-      client_secret: provinciaClientSecret,
-      username: provinciaUsername,
-      password: provinciaPassword,
-      grant_type: "password",
-      scope: "openid" // opcional, algunas API lo requieren
+  const body = new URLSearchParams({
+    client_id: "ps2",
+    client_secret: process.env.PROVINCIA_CLIENT_SECRET,
+    username: process.env.PROVINCIA_USERNAME,
+    password: process.env.PROVINCIA_PASSWORD,
+    grant_type: "password"
+  });
+
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body
+  })
+    .then(async res => {
+      if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(data => data.access_token)
+    .catch(err => {
+      console.error("❌ Error al obtener token:", err.message);
+      throw err;
     });
+};
 
-    console.log("🔹 Enviando request de token a Provincia...");
-    console.log("URL:", provinciaAuthUrl);
-    console.log("Body:", Object.fromEntries(bodyParams));
-
-    const res = await fetch(provinciaAuthUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: bodyParams
-    });
-
-    const text = await res.text();
-
-    if (!res.ok) {
-      console.error("❌ Error al obtener token Provincia:", res.status, text);
-      throw new Error(`Error al obtener token Provincia: ${res.status} - ${text}`);
-    }
-
-    const data = JSON.parse(text);
-    console.log("✅ Token obtenido correctamente:", data.access_token ? "Sí" : "No");
-    return data.access_token;
-
-  } catch (err) {
-    console.error("❌ Excepción en getProvinciaToken:", err.message);
-    throw err;
-  }
-}
-
-// 🚗 Cotizar vehículo usando datos del cliente + defaults
-export async function cotizarVehiculoConDatos(token, formLines) {
-  const [nombre, dni, modelo, patente, nacimiento, localidad] = formLines;
+const cotizarVehiculo = (token) => {
+  const API_KEY = "84630d93-d8c2-40b3-ad3d-b82773c092b5";
+  const url = `https://apimprod.provinciaseguros.com.ar/PS/PS-COTIZACION/2.2/cotizar?apikey=${API_KEY}`;
 
   const body = {
     contacto: {
-      dni,
+      dni: "12345678",
       cuit: "",
-      nombre,
-      celular: "011-1111-1111", // default
-      email: "test@fake.com",   // default
+      nombre: "PRUEBA",
+      celular: "011-1111-1111",
+      email: "test@fake.com",
       canal: "WEB"
     },
     ramoProducto: { ramo: "4", producto: "04100" },
@@ -78,13 +58,13 @@ export async function cotizarVehiculoConDatos(token, formLines) {
     },
     bien: {
       "40007_tipo": "1",
-      "40012_anio": extraerAnio(modelo),
+      "40012_anio": "2018",
       "40013_esOkm": "N",
-      "40020_marca": extraerMarca(modelo),
-      "40021_modelo": extraerCodigoModelo(modelo),
+      "40020_marca": "TOY",
+      "40021_modelo": "045307",
       "40008_uso": "1",
-      "40220_ValorDelVehiculo": 20000000,
-      "900008_codPostal": mapearLocalidad(localidad),
+      "40220_ValorDelVehiculo": 19470000,
+      "900008_codPostal": 1414,
       "40086_genero": "M",
       "40550_clausulaAjuste": 10,
       "40088_bonifAdicional": 1,
@@ -96,41 +76,25 @@ export async function cotizarVehiculoConDatos(token, formLines) {
     }
   };
 
-  const res = await fetch(`${provinciaApiUrl}?apikey=${provinciaApiKey}`, {
+  return fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify(body)
-  });
+  })
+    .then(async res => {
+      const text = await res.text();
+      if (!res.ok) throw new Error(`Error HTTP ${res.status} - ${text}`);
+      return JSON.parse(text);
+    })
+    .then(data => {
+      console.log("✅ Cotización recibida:", data);
+      return data;
+    })
+    .catch(err => console.error("❌ Error en cotización:", err.message));
+};
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Error API Provincia: ${res.status} - ${text}`);
-  }
-
-  return await res.json();
-}
-
-// --- Helpers para mapear datos del cliente ---
-function extraerAnio(modelo) {
-  const match = modelo.match(/\b(19|20)\d{2}\b/);
-  return match ? match[0] : "2018";
-}
-
-function extraerMarca(modelo) {
-  if (modelo.toLowerCase().includes("toy")) return "TOY";
-  if (modelo.toLowerCase().includes("ford")) return "FOR";
-  return "GEN";
-}
-
-function extraerCodigoModelo(modelo) {
-  return "045307"; // TODO: usar catálogo real
-}
-
-function mapearLocalidad(localidad) {
-  if (localidad.toLowerCase().includes("caba")) return 1414;
-  if (localidad.toLowerCase().includes("la plata")) return 1900;
-  return 1414;
-}
+// --- Exportar funciones ---
+export { getProvinciaToken, cotizarVehiculo };

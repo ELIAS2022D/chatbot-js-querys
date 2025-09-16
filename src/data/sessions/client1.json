@@ -2,15 +2,19 @@
   "users": [
     {
       "phone": "5492262513045",
-      "lastMessage": 1756866139984
+      "lastMessage": 1757956363497
     },
     {
       "phone": "5491128695886",
-      "lastMessage": 1757954141911
+      "lastMessage": 1757986830774
     },
     {
       "phone": "5491172033200",
       "lastMessage": 1757953295605
+    },
+    {
+      "phone": "status@broa",
+      "lastMessage": 1757956363501
     }
   ]
 }

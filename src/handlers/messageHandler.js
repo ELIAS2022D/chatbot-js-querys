@@ -1,9 +1,9 @@
 import { getSession } from "../services/sessionsService.js";
 import { hasBeenLongEnough } from "../utils/toolkit.js";
 import { togglePauseBot, isBotPaused } from "../services/botPauseService.js";
-import { getProvinciaToken, cotizarVehiculoConDatos } from "../cotizaciones/provinciaService.js";
+import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js"; // tu servicio de prueba
 
-const sessions = {}; // Estado de usuarios en memoria (submenús activos)
+const sessions = {};
 
 // --- Helpers ---
 const hasMinLines = (text, n) =>
@@ -24,7 +24,7 @@ const validateForm = (session, rawText, message) => {
   const ok = {
     waitingDataPoliza: hasMinLines(rawText, 2),
     waitingDataGenerico: hasMinLines(rawText, 2),
-    waitingDataCotizacion: hasMinLines(rawText, 6), // ahora requerimos 6 líneas en un solo mensaje
+    waitingDataCotizacion: hasMinLines(rawText, 4),
     waitingDataUbicacion: !!isWhatsAppLocation,
     waitingDataDenuncia: hasMinLines(rawText, 2),
     waitingFotos: !!isPhoto,
@@ -32,6 +32,26 @@ const validateForm = (session, rawText, message) => {
   return ok[session] ?? false;
 };
 
+// --- Función para formatear la cotización de prueba ---
+const formatCotizacion = (data) => {
+  let msg = `📅 Fecha: ${data.fechaCotizacion}\n🆔 Nº Cotización: ${data.numeroCotizacion}\n\n`;
+  msg += `🚗 Bienes Cotizados:\n`;
+  data.bienesCotizados.forEach(b => {
+    msg += `- ${b.bien} | Suma Asegurada: $${b.sumaAsegurada}\n`;
+  });
+  msg += `\n📝 Planes:\n`;
+  data.planes.forEach(p => {
+    msg += `Plan ${p.plan}: ${p.descripcion}`;
+    if (p.descripcionAdicional) msg += ` - ${p.descripcionAdicional}`;
+    msg += `\n`;
+    p.promocionesPorPlan.forEach(prom => {
+      msg += `  * ${prom.descripcion} | Premio: $${prom.premio} | Vigencia: ${prom.vigencia}\n`;
+    });
+  });
+  return msg;
+};
+
+// --- Main Handler ---
 const handleMessage = async (message, clientId, config) => {
   const msgTimestamp = message.timestamp * 1000;
   const now = Date.now();
@@ -44,7 +64,7 @@ const handleMessage = async (message, clientId, config) => {
   const userId = message.from;
   const session = await getSession(message, clientId);
 
-  // --- Pausar/Reanudar bot ---
+  // Pausar/Reanudar bot
   if (texto === "bot") {
     const paused = togglePauseBot(userId);
     return paused
@@ -53,7 +73,6 @@ const handleMessage = async (message, clientId, config) => {
   }
   if (isBotPaused(userId)) return;
 
-  // --- Bienvenida si pasó mucho tiempo ---
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`);
   }
@@ -70,23 +89,19 @@ const handleMessage = async (message, clientId, config) => {
     switch (texto) {
       case "1":
       case "cotizacion":
-        sessions[userId] = "waitingDataCotizacion"; 
+        sessions[userId] = "waitingDataCotizacion";
         return message.reply(
           "🚗🏍 Cotización de Vehículo\n\n" +
-          "Por favor enviá un solo mensaje con estos 6 datos, **cada uno en una línea**:\n" +
+          "Por favor enviá un solo mensaje con estos 4 datos, **cada uno en una línea**:\n" +
           "1. Nombre y apellido del titular\n" +
           "2. DNI\n" +
           "3. Marca/Modelo/Año\n" +
-          "4. Patente\n" +
-          "5. Fecha de nacimiento\n" +
-          "6. Localidad"
+          "4. Localidad"
         );
-
       case "2":
       case "denunciar":
         sessions[userId] = "waitingDataDenuncia";
         return message.reply((menu.response2 || "🚨 Denuncia de siniestro") + "\n\n✍️ Enviá los datos solicitados ⚠️");
-
       case "3":
       case "poliza":
       case "póliza":
@@ -94,27 +109,22 @@ const handleMessage = async (message, clientId, config) => {
       case "cupón":
         sessions[userId] = "3";
         return message.reply(menu.response3);
-
       case "4":
       case "anulacion":
       case "anulación":
         sessions[userId] = "waitingDataGenerico";
         return message.reply(menu.response4);
-
       case "5":
       case "grua":
       case "grúa":
         sessions[userId] = "waitingDataDatosGrua";
         return message.reply("🚗 Pedido de grúa\n\nEnviá:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino\n- Teléfono");
-
       case "6":
         sessions[userId] = "directResponse";
         return message.reply(menu.response6);
-
       case "7":
         sessions[userId] = "directResponse";
         return message.reply(menu.response7);
-
       default:
         for (const [responseKey, list] of Object.entries(keywords)) {
           if (list.some(kw => texto.includes(kw))) {
@@ -137,9 +147,6 @@ const handleMessage = async (message, clientId, config) => {
       return message.reply((menu.response3_2 || "💳 Para cupón:") + "\n\nN° póliza\nNombre\nDNI");
     }
     if (hasMinLines(message.body, 2)) {
-      if (!validateForm("waitingDataPoliza", message.body, message)) {
-        return message.reply("⚠️ Datos inválidos. Ejemplo:\n123456789\nJuan Pérez - 12345678");
-      }
       sessions[userId] = null;
       return message.reply("✅ Recibido, en instantes tendrá su respuesta.");
     }
@@ -152,32 +159,25 @@ const handleMessage = async (message, clientId, config) => {
     return message.reply("✅ Recibida su consulta.");
   }
 
-  // ---- CAPTURA DE FORMULARIOS COTIZACIÓN (6 datos en un solo mensaje) ----
+  // ---- CAPTURA DE FORMULARIOS COTIZACIÓN (4 datos) ----
   if (currentSession === "waitingDataCotizacion") {
     if (!validateForm("waitingDataCotizacion", message.body, message)) {
-      return message.reply("⚠️ Por favor enviá los 6 datos en **un solo mensaje**, cada uno en una línea.");
+      return message.reply("⚠️ Por favor enviá los 4 datos en **un solo mensaje**, cada uno en una línea.");
     }
-
-    const formLines = message.body.split("\n").map(l => l.trim());
 
     try {
       const token = await getProvinciaToken();
-      const cotizacion = await cotizarVehiculoConDatos(token, formLines);
-
-      let textoRespuesta = "📄 Cotización recibida:\n\n";
-      if (cotizacion?.cotizaciones?.length > 0) {
-        cotizacion.cotizaciones.forEach((c, i) => {
-          textoRespuesta += `🔹 Opción ${i + 1}\n`;
-          textoRespuesta += `Cobertura: ${c.cobertura || "N/A"}\n`;
-          textoRespuesta += `Premio: $${c.premio || "0"}\n\n`;
-        });
-      } else {
-        textoRespuesta += "⚠️ No se encontraron planes disponibles.\n";
-      }
+      const data = await cotizarVehiculo(token); // mantiene tu consola de prueba
 
       sessions[userId] = null;
 
-      return message.reply(textoRespuesta);
+      // --- Devuelve la cotización formateada en WhatsApp ---
+      if (data) {
+        const formattedMsg = formatCotizacion(data);
+        return message.reply(formattedMsg);
+      } else {
+        return message.reply("⚠️ Error al generar la cotización de prueba.");
+      }
 
     } catch (err) {
       console.error("❌ Error en cotización:", err.message);
