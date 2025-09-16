@@ -1,3 +1,13 @@
+const isAnOldMessage = (message) => {
+    const msgTimestamp = message.timestamp * 1000;
+    const now = Date.now();
+    const diffMinutes = (now - msgTimestamp) / 1000 / 60;
+
+    if (diffMinutes > 10) {
+        return true;
+    } else return false
+}
+
 const hasBeenLongEnough = (lastTimeStamps, hours = 3) => {
     const timeNow = Date.now();
 
@@ -9,4 +19,4 @@ const hasBeenLongEnough = (lastTimeStamps, hours = 3) => {
 const formatCellphoneNumber = (cellphone) => cellphone.slice(0, -5)
 
 
-export { hasBeenLongEnough, formatCellphoneNumber };
+export { hasBeenLongEnough, formatCellphoneNumber, isAnOldMessage };
