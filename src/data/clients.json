@@ -4,6 +4,7 @@
     "menu": {
     "welcome": "🤝 ¡Bienvenido/a a Organizar - Broker de Seguros👨‍💼! \n\nElegí una opción:\n\n1️⃣ Cotización 💵\n2️⃣ Denunciar siniestro 🚨\n3️⃣ Solicitar póliza o cupón 📄\n4️⃣ Pedir anulación ❌\n5️⃣ Pedir grúa 🚗\n6️⃣ Otras consultas ❓\n7️⃣ Hablar con un asesor 👨‍💼\n\n✏ Escribí el número o palabra clave de la opción.",
     
+    "_comentario1": "response1",
     "response1": "💵 Cotización:\n\n1️⃣ Cotizar Auto 🚗\n2️⃣ Cotizar Moto 🏍\n3️⃣ Cotizar Hogar 🏠\n\n👉 Escribí el número de la opción.",
     "response1_1": "🚗 Cotización de Auto\n\nPor favor enviá estos datos:\n- Nombre y apellido del titular\n- DNI\n- Marca/Modelo/Año\n- Patente\n- Fecha de nacimiento\n- Localidad",
     "response1_2": "🏍 Cotización de Moto\n\nNecesitamos:\n- Nombre y apellido del titular\n- DNI\n- Marca/Modelo/Año\n- Cilindrada\n- Patente\n- Fecha de nacimiento\n- Localidad",
@@ -17,7 +18,7 @@
     
     "response4": "❌ Pedido de anulación\n\nPor favor indicá:\n- Nº de póliza a anular\n- Motivo de la anulación\n- Nombre y apellido del titular\n- DNI",
     
-    "response5": "🚗 Pedido de grúa\n\nEnviá los datos:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Ubicación exacta donde se encuentra el vehículo\n- Destino al que debe trasladarse\n- Teléfono de contacto",
+    "response5": "🚗 Pedido de grúa\n\nEnviá:\n- Nombre y apellido\n- Nº de póliza\n- Patente\n- Destino\n- Teléfono",
     
     "response6": "❓ Otras consultas\n\nPodés escribir libremente tu consulta y un asesor la responderá.",
     
