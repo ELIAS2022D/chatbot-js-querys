@@ -33,8 +33,20 @@ const validateForm = (session, rawText, message) => {
 };
 
 // --- Función para formatear la cotización de prueba ---
-const formatCotizacion = (data) => {
+const extraerDatosSinEtiquetas = (texto) => {
+  const lineas = texto.split(/\r?\n/).filter(linea => linea.trim() !== '');
+
+  return {
+    nombre: lineas[0] || null,
+    dni: lineas[1] || null,
+    auto: lineas[2] || null,
+    ciudad: lineas[3] || null
+  };
+}
+
+const formatCotizacion = (data, nombre) => {
   let msg = `📅 Fecha: ${data.fechaCotizacion}\n🆔 Nº Cotización: ${data.numeroCotizacion}\n\n`;
+  msg += `${nombre} \n`;
   msg += `🚗 Bienes Cotizados:\n`;
   data.bienesCotizados.forEach(b => {
     msg += `- ${b.bien} | Suma Asegurada: $${b.sumaAsegurada}\n`;
@@ -166,14 +178,15 @@ const handleMessage = async (message, clientId, config) => {
     }
 
     try {
+      const datosUsuarios = extraerDatosSinEtiquetas(message.body);
       const token = await getProvinciaToken();
-      const data = await cotizarVehiculo(token); // mantiene tu consola de prueba
+      const data = await cotizarVehiculo(token, datosUsuarios); // mantiene tu consola de prueba
 
       sessions[userId] = null;
 
       // --- Devuelve la cotización formateada en WhatsApp ---
       if (data) {
-        const formattedMsg = formatCotizacion(data);
+        const formattedMsg = formatCotizacion(data, datosUsuarios.nombre);
         return message.reply(formattedMsg);
       } else {
         return message.reply("⚠️ Error al generar la cotización de prueba.");

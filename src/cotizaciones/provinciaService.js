@@ -28,15 +28,15 @@ const getProvinciaToken = async () => {
     });
 };
 
-const cotizarVehiculo = (token) => {
+const cotizarVehiculo = (token, datosUsuarios) => {
   const API_KEY = "84630d93-d8c2-40b3-ad3d-b82773c092b5";
   const url = `https://apimprod.provinciaseguros.com.ar/PS/PS-COTIZACION/2.2/cotizar?apikey=${API_KEY}`;
 
   const body = {
     contacto: {
-      dni: "12345678",
+      dni: datosUsuarios.dni,
       cuit: "",
-      nombre: "PRUEBA",
+      nombre: datosUsuarios.nombre,
       celular: "011-1111-1111",
       email: "test@fake.com",
       canal: "WEB"
@@ -44,8 +44,8 @@ const cotizarVehiculo = (token) => {
     ramoProducto: { ramo: "4", producto: "04100" },
     datosGenerales: {
       provincia: "1",
-      tipoPersona: "F",
-      medioDePago: "2",
+      tipoPersona: "F", // persona fisíca
+      medioDePago: "2",// pesos
       origenDePago: "VISO",
       condicionIva: "CF",
       cuit: "",
