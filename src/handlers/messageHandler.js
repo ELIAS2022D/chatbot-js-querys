@@ -1,11 +1,7 @@
-import { getSession } from "../services/sessionsService.js";
-import { hasBeenLongEnough } from "../utils/toolkit.js";
-import { togglePauseBot, isBotPaused } from "../services/botPauseService.js";
+import { changeUserData, getSession } from "../services/sessionsService.js";
+import { hasBeenLongEnough, isAnOldMessage } from "../utils/toolkit.js";
 import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js"; // tu servicio de prueba
 
-const sessions = {};
-
-// --- Helpers ---
 const hasMinLines = (text, n) =>
   text.split("\n").map(l => l.trim()).filter(Boolean).length >= n;
 
@@ -63,31 +59,25 @@ const formatCotizacion = (data, nombre) => {
   return msg;
 };
 
-// --- Main Handler ---
 const handleMessage = async (message, clientId, config) => {
-  const msgTimestamp = message.timestamp * 1000;
-  const now = Date.now();
-  const diffMinutes = (now - msgTimestamp) / 1000 / 60;
-  if (diffMinutes > 10) return;
+  const session = await getSession(message, clientId);
+
+  if (hasBeenLongEnough(session.lastMessage, 0.05)) {
+    changeUserData(message.from, "botPaused", "false", clientId);
+    console.log("Entré a hasBeenLongEnough");
+    return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`);
+  }
+
+  if (isAnOldMessage(message)) return;
+  console.log(session.botPaused);
+  if (session.botPaused) return;
 
   const texto = (message.body || "").trim().toLowerCase();
   const menu = config.menu;
   const keywords = config.keywords || {};
   const userId = message.from;
-  const session = await getSession(message, clientId);
 
-  // Pausar/Reanudar bot
-  if (texto === "bot") {
-    const paused = togglePauseBot(userId);
-    return paused
-      ? message.reply("⏸️ El bot fue pausado. Ahora podés chatear con un asesor.")
-      : message.reply("▶️ El bot fue reactivado.");
-  }
-  if (isBotPaused(userId)) return;
-
-  if (hasBeenLongEnough(session.lastMessage, 0.05)) {
-    return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`);
-  }
+  const sessions = {}
 
   if (texto === "hola" || texto === "menu") {
     sessions[userId] = null;
@@ -95,6 +85,7 @@ const handleMessage = async (message, clientId, config) => {
   }
 
   const currentSession = sessions[userId];
+
 
   // ---- MENÚ PRINCIPAL ----
   if (!currentSession) {
@@ -136,6 +127,8 @@ const handleMessage = async (message, clientId, config) => {
         return message.reply(menu.response6);
       case "7":
         sessions[userId] = "directResponse";
+        changeUserData(message.from, "botPaused", "true", clientId);
+        console.log("Entré a case 7");
         return message.reply(menu.response7);
       default:
         for (const [responseKey, list] of Object.entries(keywords)) {

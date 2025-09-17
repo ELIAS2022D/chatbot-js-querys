@@ -13,13 +13,12 @@ const getSessionFilePath = (clientName) =>
 // 📂 MANEJO DE ARCHIVOS -----------------------
 // Verifica si el archivo existe
 const fileExists = async (filePath) => {
-  console.log("Estoy dentro de fileExists" + filePath);
   try {
     await fs.access(filePath);
-    console.log("Existe el archivo");
+    console.log("✅ Existe el archivo");
     return true;
   } catch {
-    console.log("No existe el archivo");
+    console.log("❌ No existe el archivo");
     return false;
   }
 };
@@ -29,7 +28,7 @@ const createClientSessionFile = async (clientName) => {
   const filePath = getSessionFilePath(clientName);
   const initialData = { users: [] };
   console.log(
-    `Creando archivo del cliente ${clientName} en la ruta ${filePath}`
+    `Creando archivo del cliente ${clientName}`
   );
   await fs.writeFile(filePath, JSON.stringify(initialData, null, 2));
 };
@@ -62,6 +61,7 @@ const createUserSession = async (filePath, data, message) => {
   const newUser = {
     phone: cellphone,
     lastMessage: timeNow,
+    botPaused: false,
   };
 
   data.users.push(newUser);
@@ -73,8 +73,6 @@ const createUserSession = async (filePath, data, message) => {
 // Función principal que devuelve los datos del usuario dentro de la session del cliente
 const getSession = async (message, clientId) => {
   const filePath = getSessionFilePath(clientId);
-
-  console.log(`Entrando en getSession. El filePath es ${filePath}`);
 
   try {
     const exists = await fileExists(filePath);
@@ -88,10 +86,9 @@ const getSession = async (message, clientId) => {
     let user = userExist(data, cellphone);
 
     if (user) {
-      console.log("El usuario existe. Modificando horario de ultimo mensaje")
+      user.botPaused = user.botPaused === "true";
       await saveLastMessage(filePath, data, message);
     } else {
-      console.log("El usuario NO existe. Creando session...")
       user = await createUserSession(filePath, data, message);
     }
 
@@ -103,4 +100,25 @@ const getSession = async (message, clientId) => {
   }
 };
 
-export { getSession, createClientSessionFile };
+const changeUserData = async (cellphoneRaw, key, value, clientId) => {
+  try {
+    const cellphone = formatCellphoneNumber(cellphoneRaw);
+    const filePath = getSessionFilePath(clientId);
+    const data = await getAllSessions(filePath);
+    const user = userExist(data, cellphone);
+
+    // Verificar si el usuario tiene la key que estás buscando
+    if (!(key in user)) {
+      console.log(`La clave "${key}" no existe en el usuario.`);
+      return;
+    }
+    // Actualizar el valor de la key
+    user[key] = value;
+
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export { getSession, createClientSessionFile, changeUserData };
