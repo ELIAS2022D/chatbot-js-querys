@@ -1,63 +1,50 @@
-import { promises as fs } from "fs";
-import { fileURLToPath } from "url";
 import { formatCellphoneNumber } from "../utils/toolkit.js";
-import path from "path";
+import redisClient from "../db/redisClient.js";
 
-// 🔍 RUTAS ------------------------------------
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// Genera la ruta del archivo según el nombre del cliente
-const getSessionFilePath = (clientName) =>
-  path.join(__dirname, "..", "data", "sessions", `${clientName}.json`);
+// 🔑 Helpers para Redis -----------------------
+const getSessionKey = (clientName) => `session:${clientName}`; // funcion entrada que le pasa a redis para guardarlo bajo keys.
 
-
-// 📂 MANEJO DE ARCHIVOS -----------------------
-// Verifica si el archivo existe
-const fileExists = async (filePath) => {
-  try {
-    await fs.access(filePath);
-    console.log("✅ Existe el archivo");
-    return true;
-  } catch {
-    console.log("❌ No existe el archivo");
-    return false;
-  }
+// Obtener todas las sesiones de un cliente
+const getAllSessions = async (clientName) => {
+  const key = getSessionKey(clientName);
+  const data = await redisClient.get(key);
+  return data ? JSON.parse(data) : null;
 };
 
-// Crea el archivo con estructura inicial
-const createClientSessionFile = async (clientName) => {
-  const filePath = getSessionFilePath(clientName);
-  const initialData = { users: [] };
-  console.log(
-    `Creando archivo del cliente ${clientName}`
-  );
-  await fs.writeFile(filePath, JSON.stringify(initialData, null, 2));
-};
-// Devuelve los datos del archivo
-const getAllSessions = async (filePath) => {
-  const data = await fs.readFile(filePath, "utf8");
-  return JSON.parse(data);
+// Crear estructura inicial para un cliente
+const createClientSession = async (clientName) => {
+  const key = getSessionKey(clientName);
+  const initialData = { users: [] }; // Setea vacío para pasarle datos automaticamente.
+  await redisClient.set(key, JSON.stringify(initialData));
+  return initialData;
 };
 
-// 📝 INFORMACION Y DATOS DE USUARIO ----------------------
-// Verifica si el usuario existe
+// Guardar todas las sesiones de un cliente
+const saveSessions = async (clientName, data) => {
+  const key = getSessionKey(clientName);
+  await redisClient.set(key, JSON.stringify(data));
+};
+
+// 🔍 Buscar usuario dentro de la data
 const userExist = (data, cellphone) =>
-  data.users.find((user) => user.phone === cellphone); //Si no tiene corchetes significa que tiene un return implicito
+  data.users.find((user) => user.phone === cellphone);
 
-// Guarda el último mensaje
-const saveLastMessage = async (filePath, data, message) => {
+// 📝 Guardar último mensaje
+const saveLastMessage = async (clientName, data, message) => {
   const cellphone = formatCellphoneNumber(message.from);
   const timeNow = Date.now();
   const user = data.users.find((u) => u.phone === cellphone);
 
   user.lastMessage = timeNow;
-  console.log(`Guardando el ultimo mensaje al usuario: ${user}`);
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  await saveSessions(clientName, data);
 };
-// Crea una nueva sesión de usuario
-const createUserSession = async (filePath, data, message) => {
+
+// Crear nueva sesión de usuario
+const createUserSession = async (clientName, data, message) => {
   const cellphone = formatCellphoneNumber(message.from);
   const timeNow = Date.now();
 
+  // formato para agregar usuario
   const newUser = {
     phone: cellphone,
     lastMessage: timeNow,
@@ -65,34 +52,29 @@ const createUserSession = async (filePath, data, message) => {
   };
 
   data.users.push(newUser);
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  await saveSessions(clientName, data);
   return newUser;
 };
 
 // 👑 LOGICA DE NEGOCIO PRINCIPAL
-// Función principal que devuelve los datos del usuario dentro de la session del cliente
+//Cambiar adaptacion en lugar de trabajar todas las sesiones, trabajar con un usuario particular.
 const getSession = async (message, clientId) => {
-  const filePath = getSessionFilePath(clientId);
-
   try {
-    const exists = await fileExists(filePath);
-    if (!exists) {
-      await createClientSessionFile(clientId);
+    let data = await getAllSessions(clientId);
+
+    if (!data) {
+      data = await createClientSession(clientId);
     }
 
-    const data = await getAllSessions(filePath);
     const cellphone = formatCellphoneNumber(message.from);
-
     let user = userExist(data, cellphone);
 
     if (user) {
-      user.botPaused = user.botPaused === "true";
-      await saveLastMessage(filePath, data, message);
+      await saveLastMessage(clientId, data, message);
     } else {
-      user = await createUserSession(filePath, data, message);
+      user = await createUserSession(clientId, data, message);
     }
 
-    // Retorno Session de Usuario
     return user;
   } catch (error) {
     console.error("Error al manejar la sesión:", error);
@@ -100,25 +82,27 @@ const getSession = async (message, clientId) => {
   }
 };
 
+// Cambiar un dato del usuario
 const changeUserData = async (cellphoneRaw, key, value, clientId) => {
   try {
     const cellphone = formatCellphoneNumber(cellphoneRaw);
-    const filePath = getSessionFilePath(clientId);
-    const data = await getAllSessions(filePath);
-    const user = userExist(data, cellphone);
+    const data = await getAllSessions(clientId);
 
-    // Verificar si el usuario tiene la key que estás buscando
+    if (!data) return;
+
+    const user = userExist(data, cellphone);
+    if (!user) return;
+
     if (!(key in user)) {
       console.log(`La clave "${key}" no existe en el usuario.`);
       return;
     }
-    // Actualizar el valor de la key
-    user[key] = value;
 
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    user[key] = value;
+    await saveSessions(clientId, data);
   } catch (error) {
     console.log(error);
   }
 };
 
-export { getSession, createClientSessionFile, changeUserData };
+export { getSession, createClientSession, changeUserData };
