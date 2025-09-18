@@ -2,6 +2,8 @@ import { changeUserData, getSession } from "../services/sessionsService.js";
 import { hasBeenLongEnough, isAnOldMessage } from "../utils/toolkit.js";
 import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js"; // tu servicio de prueba
 
+const sessions = {}
+
 const hasMinLines = (text, n) =>
   text.split("\n").map(l => l.trim()).filter(Boolean).length >= n;
 
@@ -61,7 +63,8 @@ const formatCotizacion = (data, nombre) => {
 
 const handleMessage = async (message, clientId, config) => {
   const session = await getSession(message, clientId);
-
+  
+  //tiempo suficiente ultimo mensaje
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     changeUserData(message.from, "botPaused", "false", clientId);
     console.log("Entré a hasBeenLongEnough");
@@ -76,8 +79,6 @@ const handleMessage = async (message, clientId, config) => {
   const menu = config.menu;
   const keywords = config.keywords || {};
   const userId = message.from;
-
-  const sessions = {}
 
   if (texto === "hola" || texto === "menu") {
     sessions[userId] = null;

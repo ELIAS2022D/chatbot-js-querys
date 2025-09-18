@@ -2,13 +2,13 @@
   "users": [
     {
       "phone": "5492262513045",
-      "lastMessage": 1758062094873,
+      "lastMessage": 1758122839674,
       "botPaused": false
     },
     {
       "phone": "5491128695886",
-      "lastMessage": 1757988555523,
-      "botPaused": "false"
+      "lastMessage": 1758122858767,
+      "botPaused": false
     },
     {
       "phone": "5491172033200",
@@ -17,8 +17,8 @@
     },
     {
       "phone": "status@broa",
-      "lastMessage": 1757956363501,
-      "botPaused": "false"
+      "lastMessage": 1758126850082,
+      "botPaused": false
     },
     {
       "phone": "5491139307466",
@@ -28,6 +28,16 @@
     {
       "phone": "5491131433906",
       "lastMessage": 1758061754161,
+      "botPaused": false
+    },
+    {
+      "phone": "556792937163",
+      "lastMessage": 1758122866411,
+      "botPaused": false
+    },
+    {
+      "phone": "5491122549293",
+      "lastMessage": 1758126850496,
       "botPaused": false
     }
   ]
