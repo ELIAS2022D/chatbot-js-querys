@@ -1,10 +1,10 @@
-import { formatCellphoneNumber } from "../utils/toolkit.js";
+import { formatCellphoneNumber, isEmptyObject } from "../utils/toolkit.js";
 import redisClient from "../db/redisClient.js";
 
-//-------------- ❇️ FUNCIONES PARA CREAR y OBTENER USUARIOS ❇️ ---------------------
+//🔧 hSet = datos que cambian seguido, como una tabla ⬅️ EN ESTE CASO
+//📦 set = objetos completos, como una caja cerrada
 
-// ❔ Verificar si un objeto está vacío
-const isEmptyObject = (obj) => Object.keys(obj).length === 0;
+//-------------- ❇️ FUNCIONES PARA CREAR y OBTENER USUARIOS ❇️ ---------------------
 
 // 📝🆕➕ Crear usuario
 const createUserSession = async (clientId, message) => {
@@ -84,5 +84,12 @@ const saveLastMessage = async (clientId, message) => {
   await changeUserData(clientId, message.from, "lastMessage", timeNow);
 };
 
-
-export { getUserSession, changeUserData };
+export {
+  isEmptyObject,
+  createUserSession,
+  userExist,
+  getUserSession,
+  getAllUserSessions,
+  changeUserData,
+  saveLastMessage,
+};
