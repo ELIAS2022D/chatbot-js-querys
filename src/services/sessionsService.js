@@ -30,50 +30,41 @@ const userExist = (data, cellphone) =>
   data.users.find((user) => user.phone === cellphone);
 
 // 📝 Guardar último mensaje
-const saveLastMessage = async (clientName, data, message) => {
+const saveLastMessage = async (clientName, message) => {
   const cellphone = formatCellphoneNumber(message.from);
   const timeNow = Date.now();
-  const user = data.users.find((u) => u.phone === cellphone);
-
-  user.lastMessage = timeNow;
-  await saveSessions(clientName, data);
 };
 
 // Crear nueva sesión de usuario
-const createUserSession = async (clientName, data, message) => {
+const createUserSession = async (clientName, message) => {
   const cellphone = formatCellphoneNumber(message.from);
   const timeNow = Date.now();
 
-  // formato para agregar usuario
-  const newUser = {
+  const newUserSession = {
     phone: cellphone,
     lastMessage: timeNow,
     botPaused: false,
   };
 
-  data.users.push(newUser);
-  await saveSessions(clientName, data);
-  return newUser;
+  await redisClient.hSet(`session:${clientName}:${cellphone}`, newUserSession);
+
+  return newUserSession;
 };
 
-// 👑 LOGICA DE NEGOCIO PRINCIPAL
-//Cambiar adaptacion en lugar de trabajar todas las sesiones, trabajar con un usuario particular.
-const getSession = async (message, clientId) => {
+const isEmptyObject = (obj) => Object.keys(obj).length === 0;
+
+// Lógica que trae datos de usuario
+const getUserSession = async (message, clientId) => {
   try {
-    let data = await getAllSessions(clientId);
-
-    if (!data) {
-      data = await createClientSession(clientId);
-    }
-
     const cellphone = formatCellphoneNumber(message.from);
-    let user = userExist(data, cellphone);
+    const key = `session:${clientId}:${cellphone}`;
+    let user = await redisClient.hGetAll(key);
 
-    if (user) {
-      await saveLastMessage(clientId, data, message);
-    } else {
-      user = await createUserSession(clientId, data, message);
+    if (isEmptyObject(user)) {
+      user = await createUserSession(clientId, message);
     }
+
+    await saveLastMessage(clientId, user, message);
 
     return user;
   } catch (error) {
@@ -87,6 +78,13 @@ const changeUserData = async (cellphoneRaw, key, value, clientId) => {
   try {
     const cellphone = formatCellphoneNumber(cellphoneRaw);
     const data = await getAllSessions(clientId);
+
+    // 🟥 REDIS GUARDAR UN DATO DEL USUARIO
+    await redisClient.hSet(
+      `session:${clientName}:${cellphone}`,
+      "lastMessage",
+      timeNow
+    );
 
     if (!data) return;
 
