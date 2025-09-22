@@ -64,7 +64,7 @@ const formatCotizacion = (data, nombre) => {
 const handleMessage = async (message, clientId, config) => {
   const session = await getSession(message, clientId);
   
-  //tiempo suficiente ultimo mensaje
+  //Tiempo suficiente ultimo mensaje
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     changeUserData(message.from, "botPaused", "false", clientId);
     console.log("Entré a hasBeenLongEnough");
