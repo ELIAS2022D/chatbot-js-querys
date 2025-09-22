@@ -1,42 +1,13 @@
 import { formatCellphoneNumber } from "../utils/toolkit.js";
 import redisClient from "../db/redisClient.js";
 
-// 🔑 Helpers para Redis -----------------------
-const getSessionKey = (clientName) => `session:${clientName}`; // funcion entrada que le pasa a redis para guardarlo bajo keys.
+//-------------- ❇️ FUNCIONES PARA CREAR y OBTENER USUARIOS ❇️ ---------------------
 
-// Obtener todas las sesiones de un cliente
-const getAllSessions = async (clientName) => {
-  const key = getSessionKey(clientName);
-  const data = await redisClient.get(key);
-  return data ? JSON.parse(data) : null;
-};
+// ❔ Verificar si un objeto está vacío
+const isEmptyObject = (obj) => Object.keys(obj).length === 0;
 
-// Crear estructura inicial para un cliente
-const createClientSession = async (clientName) => {
-  const key = getSessionKey(clientName);
-  const initialData = { users: [] }; // Setea vacío para pasarle datos automaticamente.
-  await redisClient.set(key, JSON.stringify(initialData));
-  return initialData;
-};
-
-// Guardar todas las sesiones de un cliente
-const saveSessions = async (clientName, data) => {
-  const key = getSessionKey(clientName);
-  await redisClient.set(key, JSON.stringify(data));
-};
-
-// 🔍 Buscar usuario dentro de la data
-const userExist = (data, cellphone) =>
-  data.users.find((user) => user.phone === cellphone);
-
-// 📝 Guardar último mensaje
-const saveLastMessage = async (clientName, message) => {
-  const cellphone = formatCellphoneNumber(message.from);
-  const timeNow = Date.now();
-};
-
-// Crear nueva sesión de usuario
-const createUserSession = async (clientName, message) => {
+// 📝🆕➕ Crear usuario
+const createUserSession = async (clientId, message) => {
   const cellphone = formatCellphoneNumber(message.from);
   const timeNow = Date.now();
 
@@ -46,15 +17,20 @@ const createUserSession = async (clientName, message) => {
     botPaused: false,
   };
 
-  await redisClient.hSet(`session:${clientName}:${cellphone}`, newUserSession);
+  await redisClient.hSet(`session:${clientId}:${cellphone}`, newUserSession);
 
   return newUserSession;
 };
 
-const isEmptyObject = (obj) => Object.keys(obj).length === 0;
+// 🔍❓ Verificar si existe usuario
+const userExist = async (clientId, cellphone) => {
+  const key = `session:${clientId}:${cellphone}`;
+  const data = await redisClient.hGetAll(key);
+  return Object.keys(data).length > 0;
+};
 
-// Lógica que trae datos de usuario
-const getUserSession = async (message, clientId) => {
+// ↪️👨🏻 Traer un usuario
+const getUserSession = async (clientId, message) => {
   try {
     const cellphone = formatCellphoneNumber(message.from);
     const key = `session:${clientId}:${cellphone}`;
@@ -64,43 +40,49 @@ const getUserSession = async (message, clientId) => {
       user = await createUserSession(clientId, message);
     }
 
-    await saveLastMessage(clientId, user, message);
+    await saveLastMessage(clientId, message);
 
     return user;
   } catch (error) {
-    console.error("Error al manejar la sesión:", error);
+    console.error("Error al obtener la sesión:", error);
     return null;
   }
 };
 
-// Cambiar un dato del usuario
-const changeUserData = async (cellphoneRaw, key, value, clientId) => {
+// ↪️👨🏻📚 Traer todos los usuarios (Solo para analisis generales)
+const getAllUserSessions = async (clientId) => {
+  const pattern = `session:${clientId}:*`;
+  const keys = await redisClient.keys(pattern);
+
+  const users = [];
+
+  for (const key of keys) {
+    const data = await redisClient.hGetAll(key);
+    if (Object.keys(data).length > 0) {
+      users.push(data);
+    }
+  }
+
+  return users;
+};
+
+//-------------- ❇️ FUNCIONES PARA HACER ACCIONES CON UN USUARIO ❇️ ---------------------
+
+// 📝🔀👨🏻 Cambiar un dato del usuario (Funcion Madre)
+const changeUserData = async (clientId, cellphoneRaw, key, value) => {
   try {
     const cellphone = formatCellphoneNumber(cellphoneRaw);
-    const data = await getAllSessions(clientId);
-
-    // 🟥 REDIS GUARDAR UN DATO DEL USUARIO
-    await redisClient.hSet(
-      `session:${clientName}:${cellphone}`,
-      "lastMessage",
-      timeNow
-    );
-
-    if (!data) return;
-
-    const user = userExist(data, cellphone);
-    if (!user) return;
-
-    if (!(key in user)) {
-      console.log(`La clave "${key}" no existe en el usuario.`);
-      return;
-    }
-
-    user[key] = value;
-    await saveSessions(clientId, data);
+    await redisClient.hSet(`session:${clientId}:${cellphone}`, key, value);
   } catch (error) {
-    console.log(error);
+    console.error("Error al cambiar el dato del usuario:", error);
   }
 };
 
-export { getSession, createClientSession, changeUserData };
+// 📝📩 Guardar último mensaje
+const saveLastMessage = async (clientId, message) => {
+  const timeNow = Date.now();
+  await changeUserData(clientId, message.from, "lastMessage", timeNow);
+};
+
+
+export { getUserSession, changeUserData };
