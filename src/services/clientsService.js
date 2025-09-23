@@ -60,7 +60,7 @@ const getAllClients = async () => {
   return clients;
 };
 
-//-------------- ❇️ FUNCIONES PARA HACER ACCIONES CON UN USUARIO ❇️ ---------------------
+//-------------- ❇️ FUNCIONES PARA HACER ACCIONES CON UN CLIENTE ❇️ ---------------------
 
 // 📝🔀👨🏻‍💼💼 Cambiar un dato del cliente (Funcion Madre)
 const changeClientData = async (clientId, key, value) => {

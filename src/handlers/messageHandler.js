@@ -1,23 +1,26 @@
 import { changeUserData, getSession } from "../services/sessionsService.js";
 import { hasBeenLongEnough, isAnOldMessage } from "../utils/toolkit.js";
-import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js"; // tu servicio de prueba
+import {
+  getProvinciaToken,
+  cotizarVehiculo,
+} from "../cotizaciones/provinciaService.js"; // tu servicio de prueba
+import { getClient } from "../services/clientsService.js";
 
-const sessions = {}
+const sessions = {};
 
 const hasMinLines = (text, n) =>
-  text.split("\n").map(l => l.trim()).filter(Boolean).length >= n;
+  text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean).length >= n;
 
-const includesAny = (text, arr) =>
-  arr.some(k => text.includes(k));
+const includesAny = (text, arr) => arr.some((k) => text.includes(k));
 
 const validateForm = (session, rawText, message) => {
   const isWhatsAppLocation =
-    message.location &&
-    message.location.latitude &&
-    message.location.longitude;
+    message.location && message.location.latitude && message.location.longitude;
 
-  const isPhoto =
-    message.hasMedia || message.type === "image";
+  const isPhoto = message.hasMedia || message.type === "image";
 
   const ok = {
     waitingDataPoliza: hasMinLines(rawText, 2),
@@ -32,61 +35,103 @@ const validateForm = (session, rawText, message) => {
 
 // --- Función para formatear la cotización de prueba ---
 const extraerDatosSinEtiquetas = (texto) => {
-  const lineas = texto.split(/\r?\n/).filter(linea => linea.trim() !== '');
+  const lineas = texto.split(/\r?\n/).filter((linea) => linea.trim() !== "");
 
   return {
     nombre: lineas[0] || null,
     dni: lineas[1] || null,
     auto: lineas[2] || null,
-    ciudad: lineas[3] || null
+    ciudad: lineas[3] || null,
   };
-}
+};
 
 const formatCotizacion = (data, nombre) => {
   let msg = `📅 Fecha: ${data.fechaCotizacion}\n🆔 Nº Cotización: ${data.numeroCotizacion}\n\n`;
   msg += `${nombre} \n`;
   msg += `🚗 Bienes Cotizados:\n`;
-  data.bienesCotizados.forEach(b => {
+  data.bienesCotizados.forEach((b) => {
     msg += `- ${b.bien} | Suma Asegurada: $${b.sumaAsegurada}\n`;
   });
   msg += `\n📝 Planes:\n`;
-  data.planes.forEach(p => {
+  data.planes.forEach((p) => {
     msg += `Plan ${p.plan}: ${p.descripcion}`;
     if (p.descripcionAdicional) msg += ` - ${p.descripcionAdicional}`;
     msg += `\n`;
-    p.promocionesPorPlan.forEach(prom => {
+    p.promocionesPorPlan.forEach((prom) => {
       msg += `  * ${prom.descripcion} | Premio: $${prom.premio} | Vigencia: ${prom.vigencia}\n`;
     });
   });
   return msg;
 };
 
-const handleMessage = async (message, clientId, config) => {
-  const session = await getSession(message, clientId);
-  
-  //Tiempo suficiente ultimo mensaje
-  if (hasBeenLongEnough(session.lastMessage, 0.05)) {
-    changeUserData(message.from, "botPaused", "false", clientId);
-    console.log("Entré a hasBeenLongEnough");
-    return message.reply(`Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`);
+// 🧾 Ejemplo de mensaje del usuario
+// "Quiero cotizar un seguro"
+//
+// 🧾 Ejemplo de estructura del cliente
+// client.keywords = {
+//   response1: ["cotizar", "1"],
+//   response2: ["siniestro", "2"]
+// }
+//
+// client.menu = {
+//   response1: "🚗 Cotización de vehículo...",
+//   response2: "🚨 Denuncia de siniestro...",
+//   default: "⚠ No entendí tu respuesta."
+// }
+
+const getDynamicResponse = (clientId, userText) => {
+  const client = getClient(clientId);
+  // 🔤 Normalizamos el texto del usuario (minúsculas y sin espacios raros)
+  const normalizedText = userText.toLowerCase().trim();
+
+  // 🔁 Recorremos cada entrada de keywords del cliente
+  // 💬 responseKey = "response1"
+  // 🔑 keywordList = ["cotizar", "1"]
+  // 🔑📄 Object.entries(client.keywords) = Convierte en clave valor
+  for (const [responseKey, keywordList] of Object.entries(client.keywords)) {
+    const match = keywordList.some((keyword) =>
+      normalizedText.includes(keyword.toLowerCase())
+    );
+
+    // ✅ Si hay coincidencia, devolvemos la respuesta correspondiente del menú
+    if (match) {
+      return client.menu[responseKey];
+    }
   }
 
+  // ❌ Si no hubo coincidencias, devolvemos el mensaje por defecto
+  return client.menu.default || "⚠ No entendí tu respuesta.";
+};
+
+const handleMessage = async (message, clientId, config) => {
+  const session = await getSession(message, clientId);
+
+  // COMPROBACIONES INICIALES <-- Debemos llevarlo a una funcion initialMessageVerifications() porque son muchas comprobaciones
+  if (hasBeenLongEnough(session.lastMessage, 0.05)) {
+    changeUserData(message.from, "botPaused", false, clientId);
+    return message.reply(
+      `Bienvenido/a de nuevo ${session.name}. Envía *menu* para comenzar.`
+    );
+  }
   if (isAnOldMessage(message)) return;
-  console.log(session.botPaused);
   if (session.botPaused) return;
 
+  const replyText = await getDynamicResponse(clientId, message.from);
+  return message.reply(replyText);
+
+  /*
   const texto = (message.body || "").trim().toLowerCase();
   const menu = config.menu;
   const keywords = config.keywords || {};
   const userId = message.from;
 
+  // Las palabras no deben ser hardcodeadas sino traidas de las que definió el usuario como showMenuKeywords
   if (texto === "hola" || texto === "menu") {
     sessions[userId] = null;
     return message.reply(menu.welcome);
   }
 
   const currentSession = sessions[userId];
-
 
   // ---- MENÚ PRINCIPAL ----
   if (!currentSession) {
@@ -240,7 +285,7 @@ const handleMessage = async (message, clientId, config) => {
     return message.reply(`📸 Foto recibida (${sessions[userId + "_fotos"].length}/5). Podés enviar más o escribir *listo*.`);
   }
 
-  return message.reply(menu.default);
+  */
 };
 
 export { handleMessage };
