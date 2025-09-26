@@ -1,5 +1,5 @@
 import { changeUserData, getUserSession } from "../services/sessionsService.js";
-import { hasBeenLongEnough, isAnOldMessage } from "../utils/toolkit.js";
+import { hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from "../utils/toolkit.js";
 import {
   getProvinciaToken,
   cotizarVehiculo,
@@ -104,7 +104,7 @@ const getDynamicResponse = (clientId, userText) => {
 };
 
 const handleMessage = async (message, clientId, config) => {
-  const session = await getUserSession(message, clientId);
+  const session = await getUserSession(clientId, message);
 
   // COMPROBACIONES INICIALES <-- Debemos llevarlo a una funcion initialMessageVerifications() porque son muchas comprobaciones
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {

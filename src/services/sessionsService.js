@@ -1,4 +1,8 @@
-import { formatCellphoneNumber, isEmptyObject } from "../utils/toolkit.js";
+import {
+  formatCellphoneNumber,
+  isEmptyObject,
+  waitingConfirmation,
+} from "../utils/toolkit.js";
 import redisClient from "../db/redisClient.js";
 
 //🔧 hSet = datos que cambian seguido, como una tabla ⬅️ EN ESTE CASO
@@ -33,6 +37,7 @@ const getUserSession = async (clientId, message) => {
   try {
     const cellphone = formatCellphoneNumber(message.from);
     const key = `session:${clientId}:${cellphone}`;
+
     let user = await redisClient.hGetAll(key);
 
     if (isEmptyObject(user)) {
