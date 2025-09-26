@@ -3,16 +3,20 @@
 // LocalAuth guarda datos de sesión para no tener que iniciar sesión cada vez
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
-import { getClients } from "./clientsService.js";
+import { getAllClients } from "./clientsService.js";
 import { handleMessage } from "../handlers/messageHandler.js";
+import { waitingConfirmation } from "../utils/toolkit.js";
 const { Client, LocalAuth } = pkg;
 
-const initializeService = () => {
+const initializeService = async () => {
   //Trae todos los clientes de nuestro sistema
-  const clientsConfig = getClients();
+  const clientsConfig = getAllClients().then(res => {
+    waitingConfirmation(res);
+  });
 
   Object.entries(clientsConfig).forEach(([clientId, config]) => {
     //Si el cliente no está activo, no generamos QR (Sirve para dar de baja clientes)
+    
     if (!config.active) return;
 
     //Crea cliente para configurar

@@ -10,6 +10,7 @@
   "dependencies": {
     "dotenv": "^17.2.2",
     "qrcode-terminal": "^0.12.0",
+    "readline": "^1.3.0",
     "redis": "^5.8.2",
     "whatsapp-web.js": "github:BenyFilho/whatsapp-web.js#fix_event_ready_again"
   }

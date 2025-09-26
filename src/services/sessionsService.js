@@ -18,7 +18,6 @@ const createUserSession = async (clientId, message) => {
   };
 
   await redisClient.hSet(`session:${clientId}:${cellphone}`, newUserSession);
-
   return newUserSession;
 };
 
