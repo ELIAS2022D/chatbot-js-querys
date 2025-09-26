@@ -29,7 +29,7 @@ const getProvinciaToken = async () => {
 };
 
 const cotizarVehiculo = (token, datosUsuarios) => {
-  const API_KEY = "84630d93-d8c2-40b3-ad3d-b82773c092b5";
+  const API_KEY = "8ggOaHQdqhmWkXCLR81amxVoq35welQF";
   const url = `https://apimprod.provinciaseguros.com.ar/PS/PS-COTIZACION/2.2/cotizar?apikey=${API_KEY}`;
 
   const body = {
