@@ -38,6 +38,7 @@ const getClient = async (clientId) => {
       const client = await createClient(clientId, "Cliente sin nombre");
       return client;
     }
+
     return JSON.parse(raw);
   } catch (error) {
     console.error("Error al obtener cliente:", error);
