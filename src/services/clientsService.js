@@ -6,7 +6,7 @@ import redisClient from "../db/redisClient.js";
 //-------------- ❇️ FUNCIONES PARA CREAR y OBTENER CLIENTES ❇️ ---------------------
 
 // 📝🆕➕ Crear cliente
-const createClient = async (clientId, clientName) => {
+const createClient = async (clientName) => {
   const newClient = {
     // id: lastId, AQUÍ IMPLEMENTAREMOS EL ULTIMO ID DISPONIBLE
     name: clientName,
@@ -20,22 +20,22 @@ const createClient = async (clientId, clientName) => {
     active: true,
   };
 
-  await redisClient.set(`client:${clientId}`, JSON.stringify(newClient));
+  await redisClient.set(`client:${clientName}`, JSON.stringify(newClient));
   return newClient;
 };
 
 // 🔍❓ Verificar si existe cliente
-const clientExist = async (clientId) => {
-  const raw = await redisClient.get(`client:${clientId}`);
+const clientExist = async (clientName) => {
+  const raw = await redisClient.get(`client:${clientName}`);
   return !!raw;
 };
 
 // ↪️👨🏻‍💼💼 Traer un cliente
-const getClient = async (clientId) => {
+const getClient = async (clientName) => {
   try {
-    const raw = await redisClient.get(`client:${clientId}`);
+    const raw = await redisClient.get(`client:${clientName}`);
     if (!raw) {
-      const client = await createClient(clientId, "Cliente sin nombre");
+      const client = await createClient(clientName);
       return client;
     }
 
@@ -75,9 +75,9 @@ const getAllClients = async () => {
  * - changeClientData("cliente1", "keywords.ayuda", ["ayuda", "soporte", "3"])
  * - changeClientData("cliente1", "menu.options.contacto", "Podés llamarnos al 0800...")
  */
-const changeClientData = async (clientId, path, value) => {
+const changeClientData = async (clientName, path, value) => {
   try {
-    const raw = await redisClient.get(`client:${clientId}`);
+    const raw = await redisClient.get(`client:${clientName}`);
     if (!raw) return;
 
     const client = JSON.parse(raw);
@@ -94,7 +94,7 @@ const changeClientData = async (clientId, path, value) => {
 
     current[keys[keys.length - 1]] = value;
 
-    await redisClient.set(`client:${clientId}`, JSON.stringify(client));
+    await redisClient.set(`client:${clientName}`, JSON.stringify(client));
   } catch (error) {
     console.error("Error al cambiar el dato del cliente:", error);
   }

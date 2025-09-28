@@ -6,21 +6,6 @@ import {
 } from "../utils/toolkit.js";
 import { getClient } from "../services/clientsService.js";
 
-// 🧾 Ejemplo de mensaje del usuario
-// "Quiero cotizar un seguro"
-//
-// 🧾 Ejemplo de estructura del cliente
-// client.keywords = {
-//   response1: ["cotizar", "1"],
-//   response2: ["siniestro", "2"]
-// }
-//
-// client.menu = {
-//   response1: "🚗 Cotización de vehículo...",
-//   response2: "🚨 Denuncia de siniestro...",
-//   default: "⚠ No entendí tu respuesta."
-// }
-
 const showMenu = (client) => {
   const options = client.menu?.options;
 
@@ -32,10 +17,8 @@ const showMenu = (client) => {
 
   return [
     // Estoy retornando un array: [] entonces uso join para hacer salto de linea despues de cada elemento
-    "📋 Opciones disponibles:",
+    client.menu?.showMenu?.title,
     ...hints,
-    "",
-    "💬 Esperamos tu mensaje...",
   ].join("\n");
 };
 
@@ -51,9 +34,11 @@ const getDynamicResponse = async (clientName, message, session) => {
 
   if (session.botPaused) return;
 
+  //Normalizo el texto del mensaje del usuario
   const normalizedText = message.body.toLowerCase().trim();
 
-  if(normalizedText === client.menu.showMenu) return showMenu(client);
+  //Si la palabra es la asignada para mostrar el menu, entonces devuelvo la lista de menu
+  if(normalizedText === client.menu?.showMenu?.trigger?.toLowerCase().trim()) return showMenu(client);
 
   // ✅ Si coincide con una opción directa
   if (client.menu.options[normalizedText]) {
