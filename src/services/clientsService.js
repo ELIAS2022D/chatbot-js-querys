@@ -10,6 +10,7 @@ const createClient = async (clientId, clientName) => {
   const newClient = {
     // id: lastId, AQUÍ IMPLEMENTAREMOS EL ULTIMO ID DISPONIBLE
     name: clientName,
+    mail: mail,
     menu: {
       welcome: "Hola! Esta es la bienvenida default!",
       default:
@@ -62,14 +63,35 @@ const getAllClients = async () => {
 
 //-------------- ❇️ FUNCIONES PARA HACER ACCIONES CON UN CLIENTE ❇️ ---------------------
 
-// 📝🔀👨🏻‍💼💼 Cambiar un dato del cliente (Funcion Madre)
-const changeClientData = async (clientId, key, value) => {
+/**
+ * 📝🔀👨🏻‍💼💼 Cambiar un dato del cliente (Función madre)
+ * Esta función permite modificar cualquier campo del objeto cliente,
+ * incluyendo campos anidados como "menu.welcome" o "keywords.cotizar".
+ *
+ * 📌 Casos de uso:
+ * - changeClientData("cliente1", "name", "Nuevo nombre")
+ * - changeClientData("cliente1", "menu.welcome", "¡Bienvenido!")
+ * - changeClientData("cliente1", "keywords.ayuda", ["ayuda", "soporte", "3"])
+ * - changeClientData("cliente1", "menu.options.contacto", "Podés llamarnos al 0800...")
+ */
+const changeClientData = async (clientId, path, value) => {
   try {
     const raw = await redisClient.get(`client:${clientId}`);
     if (!raw) return;
 
     const client = JSON.parse(raw);
-    client[key] = value;
+
+    // 🧠 Navegamos el path tipo "menu.welcome"
+    const keys = path.split(".");
+    let current = client;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (!current[key]) current[key] = {}; // crea si no existe
+      current = current[key];
+    }
+
+    current[keys[keys.length - 1]] = value;
 
     await redisClient.set(`client:${clientId}`, JSON.stringify(client));
   } catch (error) {
@@ -82,5 +104,5 @@ export {
   clientExist,
   getClient,
   getAllClients,
-  changeClientData
+  changeClientData,
 };
