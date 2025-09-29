@@ -22,30 +22,63 @@ const showMenu = (client) => {
   ].join("\n");
 };
 
+const resolveNode = async (client, session, normalizedText) => {
+  let current = client.menu.options?.[session.currentNode];
+
+  while (current?.type === "submenu") {
+    const sub = current.suboptions?.[normalizedText];
+
+    if (!sub) {
+      const subKeys = Object.keys(current.suboptions || {});
+      return `⚠ Opción inválida. Podés escribir: ${subKeys.map(k => `*${k}*`).join(", ")}`;
+    }
+
+    if (sub.type === "static") {
+      await changeUserData(client.name, session.userId, "currentNode", null);
+      return sub.response;
+    }
+
+    if (sub.type === "submenu") {
+      await changeUserData(client.name, session.userId, "currentNode", normalizedText);
+      current = sub;
+      continue;
+    }
+
+    // Más adelante: if (sub.type === "form") iniciarFormulario(sub)
+    break;
+  }
+
+  return null;
+};
+
 const getDynamicResponse = async (clientName, message, session) => {
   if (isAnOldMessage(message)) return;
-
   const client = await getClient(clientName);
-
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     changeUserData(clientName, message.from, "botPaused", false);
     return `Bienvenido/a de nuevo.\n\n${showMenu(client)}`;
   }
-
   if (session.botPaused) return;
 
   //Normalizo el texto del mensaje del usuario
   const normalizedText = message.body.toLowerCase().trim();
 
+  if (session.currentNode != "null") {
+    const resolved = await resolveNode(client, session, normalizedText);
+    if (resolved) return resolved;
+  }
+
   //Si la palabra es la asignada para mostrar el menu, entonces devuelvo la lista de menu
   const [[triggerKey, triggerValue]] = Object.entries(
     client.menu?.showMenu || {}
   );
+
   if (normalizedText === triggerKey.toLowerCase().trim())
     return showMenu(client);
 
   // ✅ Si coincide con una opción directa traigo los datos de esa opcion
   const option = client.menu.options?.[normalizedText];
+
   // Si el tipo de opcion es estatica lo manejo con handleStatic
   if (option && option.type === "static") {
     return handleStatic(option);
