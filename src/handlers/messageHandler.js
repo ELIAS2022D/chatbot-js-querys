@@ -1,4 +1,4 @@
-import { changeUserData, getSession } from "../services/sessionsService.js";
+import { changeUserData, getUserSession } from "../services/sessionsService.js";
 import { hasBeenLongEnough, isAnOldMessage } from "../utils/toolkit.js";
 import { getProvinciaToken, cotizarVehiculo } from "../cotizaciones/provinciaService.js"; // tu servicio de prueba
 
@@ -62,7 +62,7 @@ const formatCotizacion = (data, nombre) => {
 };
 
 const handleMessage = async (message, clientId, config) => {
-  const session = await getSession(message, clientId);
+  const session = await getUserSession(message, clientId);
   
   //Tiempo suficiente ultimo mensaje
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
