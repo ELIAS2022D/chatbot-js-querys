@@ -1,8 +1,4 @@
 import redisClient from "../db/redisClient.js";
-
-//🔧 hSet = datos que cambian seguido, como una tabla
-//📦 set = objetos completos, como una caja cerrada ⬅️ EN ESTE CASO
-
 //-------------- ❇️ FUNCIONES PARA CREAR y OBTENER CLIENTES ❇️ ---------------------
 
 // 📝🆕➕ Crear cliente

@@ -12,12 +12,12 @@ const initializeService = async () => {
   //Trae todos los clientes de nuestro sistema
   const clientsConfig = await getAllClients();
 
-  Object.entries(clientsConfig).forEach(([clientId, config]) => {
+  Object.entries(clientsConfig).forEach(([clientId, clientData]) => {
     //Si el cliente no está activo, no generamos QR (Sirve para dar de baja clientes)
 
-    if (!config.active) return;
+    if (!clientData.active) return;
 
-    const sanitizedClientName = config.name.toLowerCase().trim().replace(" ", "_");
+    const sanitizedClientName = clientData.name.toLowerCase().trim().replace(" ", "_");
 
     //Crea cliente para configurar
     const client = new Client({
@@ -43,7 +43,7 @@ const initializeService = async () => {
     });
 
     client.on("message", async (message) => {
-      handleMessage(message, sanitizedClientName, config);
+      handleMessage(message, sanitizedClientName, clientData);
     });
 
     client.initialize();

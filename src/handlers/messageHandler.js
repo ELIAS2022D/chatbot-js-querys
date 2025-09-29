@@ -17,7 +17,7 @@ const showMenu = (client) => {
 
   return [
     // Estoy retornando un array: [] entonces uso join para hacer salto de linea despues de cada elemento
-    client.menu?.showMenu?.title,
+    `*${client.menu?.showMenu?.menu}*`,
     ...hints,
   ].join("\n");
 };
@@ -29,7 +29,7 @@ const getDynamicResponse = async (clientName, message, session) => {
 
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     changeUserData(clientName, message.from, "botPaused", false);
-    return `Bienvenido/a de nuevo. \n${showMenu(client)}`;
+    return `Bienvenido/a de nuevo.\n\n${showMenu(client)}`;
   }
 
   if (session.botPaused) return;
@@ -38,11 +38,27 @@ const getDynamicResponse = async (clientName, message, session) => {
   const normalizedText = message.body.toLowerCase().trim();
 
   //Si la palabra es la asignada para mostrar el menu, entonces devuelvo la lista de menu
-  if(normalizedText === client.menu?.showMenu?.trigger?.toLowerCase().trim()) return showMenu(client);
+  const [[triggerKey, triggerValue]] = Object.entries(
+    client.menu?.showMenu || {}
+  );
+  if (normalizedText === triggerKey.toLowerCase().trim())
+    return showMenu(client);
 
-  // ✅ Si coincide con una opción directa
-  if (client.menu.options[normalizedText]) {
-    return client.menu.options[normalizedText].response;
+  // ✅ Si coincide con una opción directa traigo los datos de esa opcion
+  const option = client.menu.options?.[normalizedText];
+  // Si el tipo de opcion es estatica lo manejo con handleStatic
+  if (option && option.type === "static") {
+    return handleStatic(option);
+  }
+
+  if (option && option.type === "submenu") {
+    await changeUserData(
+      clientName,
+      message.from,
+      "currentNode",
+      normalizedText
+    );
+    return handleSubmenu(option);
   }
 
   // 🔍 Si coincide con alguna keyword
@@ -60,7 +76,19 @@ const getDynamicResponse = async (clientName, message, session) => {
   return client.menu.default || "⚠ No entendí tu respuesta.";
 };
 
-const handleMessage = async (message, clientName, config) => {
+const handleStatic = (option) => {
+  return option.response || "⚠ No hay respuesta definida.";
+};
+
+const handleSubmenu = (option) => {
+  const subHints = Object.entries(option.suboptions || {})
+    .map(([key, val]) => `*${key}*: ${val.response}`)
+    .join("\n");
+
+  return `${option.response}\n\n${subHints}`;
+};
+
+const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
   const replyText = await getDynamicResponse(clientName, message, session);
   return message.reply(replyText);
