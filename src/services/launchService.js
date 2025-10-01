@@ -1,49 +1,46 @@
-// Dos clases del paquete whatsapp-web.js
-// Client sirve para interactuar con WhatsApp
-// LocalAuth guarda datos de sesión para no tener que iniciar sesión cada vez
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
+import QRCode from "qrcode";
 import { getAllClients } from "./clientsService.js";
 import { handleMessage } from "../handlers/messageHandler.js";
 import { waitingConfirmation } from "../utils/toolkit.js";
+import { enviarMailConQR } from "../integrations/mailServices.js";
+
+
 const { Client, LocalAuth } = pkg;
 
 const initializeService = async () => {
-  //Trae todos los clientes de nuestro sistema
   const clientsConfig = await getAllClients();
 
-  Object.entries(clientsConfig).forEach(([clientId, clientData]) => {
-    //Si el cliente no está activo, no generamos QR (Sirve para dar de baja clientes)
+  Object.entries(clientsConfig).forEach(([clientId, config]) => {
+    if (!config.active) return;
 
-    if (!clientData.active) return;
+    const sanitizedClientName = config.name.toLowerCase().trim().replace(" ", "_");
 
-    const sanitizedClientName = clientData.name.toLowerCase().trim().replace(" ", "_");
-
-    //Crea cliente para configurar
     const client = new Client({
       authStrategy: new LocalAuth({ clientId }),
     });
 
-    client.on("qr", (qr) => {
+    client.on("qr", async (qr) => {
       console.log(`\n🔗 QR para cliente ${config.name}\n`);
-      console.log(`Implementar envío de QR al mail ${config?.mail} AQUI \n`)
+
+      const qrBase64 = await QRCode.toDataURL(qr);
+
+      if (config?.mail) {
+        await enviarMailConQR(config.mail, qrBase64, config.name);
+      } else {
+        console.log("⚠️ No se encontró un mail configurado para este cliente");
+      }
+
       qrcode.generate(qr, { small: true });
-      console.log(
-        `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-          qr
-        )}&size=100x100`
-      );
-      //Necesitamos conseguir una manera de enviar el QR de manera más directa al usuario y esteticamente mejor (Quizás con un bot propio)
     });
 
     client.on("ready", () => {
-      console.log(
-        `🤖 Chatbot de ${config.name} listo para responder mensajes!`
-      );
+      console.log(`🤖 Chatbot de ${config.name} listo para responder mensajes!`);
     });
 
     client.on("message", async (message) => {
-      handleMessage(message, sanitizedClientName, clientData);
+      handleMessage(message, sanitizedClientName, config);
     });
 
     client.initialize();
