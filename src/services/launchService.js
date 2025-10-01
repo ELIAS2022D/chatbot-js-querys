@@ -12,22 +12,22 @@ const { Client, LocalAuth } = pkg;
 const initializeService = async () => {
   const clientsConfig = await getAllClients();
 
-  Object.entries(clientsConfig).forEach(([clientId, config]) => {
-    if (!config.active) return;
+  Object.entries(clientsConfig).forEach(([clientId, clientData]) => {
+    if (!clientData.active) return;
 
-    const sanitizedClientName = config.name.toLowerCase().trim().replace(" ", "_");
+    const sanitizedClientName = clientData.name.toLowerCase().trim().replace(" ", "_");
 
     const client = new Client({
       authStrategy: new LocalAuth({ clientId }),
     });
 
     client.on("qr", async (qr) => {
-      console.log(`\n🔗 QR para cliente ${config.name}\n`);
+      console.log(`\n🔗 QR para cliente ${clientData.name}\n`);
 
       const qrBase64 = await QRCode.toDataURL(qr);
 
-      if (config?.mail) {
-        await enviarMailConQR(config.mail, qrBase64, config.name);
+      if (clientData?.mail) {
+        await enviarMailConQR(clientData.mail, qrBase64, clientData.name);
       } else {
         console.log("⚠️ No se encontró un mail configurado para este cliente");
       }
@@ -36,11 +36,11 @@ const initializeService = async () => {
     });
 
     client.on("ready", () => {
-      console.log(`🤖 Chatbot de ${config.name} listo para responder mensajes!`);
+      console.log(`🤖 Chatbot de ${clientData.name} listo para responder mensajes!`);
     });
 
     client.on("message", async (message) => {
-      handleMessage(message, sanitizedClientName, config);
+      handleMessage(message, sanitizedClientName, clientData);
     });
 
     client.initialize();
