@@ -1,5 +1,9 @@
 import { changeUserData, getUserSession } from "../services/sessionsService.js";
-import { hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from "../utils/toolkit.js";
+import {
+  hasBeenLongEnough,
+  isAnOldMessage,
+  waitingConfirmation,
+} from "../utils/toolkit.js";
 import { getClient } from "../services/clientsService.js";
 
 const showOptions = (options) => {
@@ -23,9 +27,7 @@ const getNestedValue = (obj, pathString) => {
   }, obj);
 };
 
-const getDynamicResponse = async (clientName, message, session) => {
-  const client = await getClient(clientName); // Debería llamarse una vez por ejecución de sistema
-
+const getDynamicResponse = async (clientName, message, session, client) => {
   if (isAnOldMessage(message)) return;
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     await changeUserData(clientName, message.from, "botPaused", false);
@@ -45,9 +47,17 @@ const getDynamicResponse = async (clientName, message, session) => {
   const suboptions = getNestedValue(client.menu.options, nextNode);
 
   if (!suboptions) {
+    const currentPath = session.currentNode;
+    const currentNode = getNestedValue(client.menu.options, currentPath);
+
+    const fallbackOptions =
+      currentNode?.type === "submenu"
+        ? showOptions(currentNode.options)
+        : showOptions(client.menu.options);
+
     return `${
       client.menu.default || "⚠ No entendí tu respuesta."
-    }\n\n${showOptions(client.menu.options)}`;
+    }\n\n${fallbackOptions}`;
   }
 
   session.currentNode = nextNode;
@@ -58,13 +68,17 @@ const getDynamicResponse = async (clientName, message, session) => {
     session.currentNode
   );
 
-  if (suboptions?.type === "submenu") {
-    return `${suboptions.response}\n\n${showOptions(suboptions.options)}`;
-  }
-
-  if (suboptions?.type === "static") {
-    await changeUserData(clientName, message.from, "currentNode", null);
-    return suboptions.response;
+  switch (suboptions?.type) {
+    case "static": {
+      await changeUserData(clientName, message.from, "currentNode", null);
+      return suboptions.response;
+    }
+    case "submenu": {
+      return `${suboptions.response}\n\n${showOptions(suboptions.options)}`;
+    }
+    case "input": {
+      //TO DO Implementar entradas de variables
+    }
   }
 
   // 🟥🟥🟥 LÓGICA DE KEYWORDS 🟥🟥🟥
@@ -84,21 +98,14 @@ const getDynamicResponse = async (clientName, message, session) => {
   }\n\n${showOptions(client.menu.options)}`;
 };
 
-// const handleStatic = (option) => {
-//   return option.response || "⚠ No hay respuesta definida.";
-// };
-
-// const handleSubmenu = (option) => {
-//   const subHints = Object.entries(option.suboptions || {})
-//     .map(([key, val]) => `*${key}*: ${val.response}`)
-//     .join("\n");
-
-//   return `${option.response}\n\n${subHints}`;
-// };
-
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
-  const replyText = await getDynamicResponse(clientName, message, session);
+  const replyText = await getDynamicResponse(
+    clientName,
+    message,
+    session,
+    clientData
+  );
   return message.reply(replyText);
 };
 

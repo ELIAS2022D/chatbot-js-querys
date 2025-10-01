@@ -6,7 +6,6 @@ import { handleMessage } from "../handlers/messageHandler.js";
 import { waitingConfirmation } from "../utils/toolkit.js";
 import { enviarMailConQR } from "../integrations/mailServices.js";
 
-
 const { Client, LocalAuth } = pkg;
 
 const initializeService = async () => {
