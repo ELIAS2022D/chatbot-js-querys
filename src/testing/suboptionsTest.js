@@ -27,7 +27,6 @@ const showOptions = (options) => {
 
 const suboptionsTest = async () => {
   const cliente = await getClient("clienttest");
-  console.log("Estamos en el menú principal");
   showOptions(cliente.menu.options);
 
   const loop = () => {
@@ -51,18 +50,16 @@ const suboptionsTest = async () => {
           ? message
           : `${user.currentNode}.${message}`;
 
-      console.log(`currentNode ahora es ${user.currentNode}`);
       const ruta = user.currentNode;
       const suboptions = getNestedValue(cliente.menu.options, ruta);
 
       if (suboptions?.type === "submenu") {
-        console.log("Es submenu");
         showOptions(suboptions.options);
       }
 
       if (suboptions?.type === "static") {
-        console.log("Es static");
         console.log(`📢 ${suboptions.response}`);
+        user.currentNode = "null";
       }
       loop(); // 🔁 vuelve a esperar input
     });

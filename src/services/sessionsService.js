@@ -19,6 +19,7 @@ const createUserSession = async (clientName, message) => {
     phone: cellphone,
     lastMessage: String(timeNow),
     botPaused: String(false),
+    currentNode: "null",
   });
 
   return await redisClient.hGetAll(`session:${clientName}:${cellphone}`);
