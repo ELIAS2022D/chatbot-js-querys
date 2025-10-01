@@ -37,6 +37,7 @@ const parseUserSession = (rawUser) => {
     phone: rawUser.phone,
     lastMessage: Number(rawUser.lastMessage),
     botPaused: rawUser.botPaused === "true",
+    currentNode: rawUser.currentNode,
   };
 };
 

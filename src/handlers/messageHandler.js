@@ -6,95 +6,73 @@ import {
 } from "../utils/toolkit.js";
 import { getClient } from "../services/clientsService.js";
 
-const showMenu = (client) => {
-  const options = client.menu?.options;
-
+const showOptions = (options) => {
   if (!options) return "⚠ Este cliente no tiene opciones configuradas.";
 
-  const hints = Object.values(options) //Me deshago de los keys. Me quedo solo con los values: {response: "", hint: ""}
-    .map((opt) => opt?.hint) // Retorno solo los hints
-    .filter(Boolean); // Elimino los que sean falsy y que no tengan contenido
+  const hints = Object.entries(options)
+    .map(([key, opt]) => opt?.hint)
+    .filter(Boolean);
 
-  return [
-    // Estoy retornando un array: [] entonces uso join para hacer salto de linea despues de cada elemento
-    `*${client.menu?.showMenu?.menu}*`,
-    ...hints,
-  ].join("\n");
+  return hints.join("\n");
 };
 
-const resolveNode = async (client, session, normalizedText) => {
-  let current = client.menu.options?.[session.currentNode];
+const getNestedValue = (obj, pathString) => {
+  const keys = pathString.split(".");
 
-  while (current?.type === "submenu") {
-    const sub = current.suboptions?.[normalizedText];
-
-    if (!sub) {
-      const subKeys = Object.keys(current.suboptions || {});
-      return `⚠ Opción inválida. Podés escribir: ${subKeys.map(k => `*${k}*`).join(", ")}`;
-    }
-
-    if (sub.type === "static") {
-      await changeUserData(client.name, session.userId, "currentNode", null);
-      return sub.response;
-    }
-
-    if (sub.type === "submenu") {
-      await changeUserData(client.name, session.userId, "currentNode", normalizedText);
-      current = sub;
-      continue;
-    }
-
-    // Más adelante: if (sub.type === "form") iniciarFormulario(sub)
-    break;
-  }
-
-  return null;
+  return keys.reduce((acc, key, index) => {
+    if (!acc || acc[key] === undefined) return undefined;
+    const next = acc[key];
+    const isLast = index === keys.length - 1;
+    return !isLast && next.type === "submenu" ? next.options : next;
+  }, obj);
 };
 
 const getDynamicResponse = async (clientName, message, session) => {
+  const client = await getClient(clientName); // Debería llamarse una vez por ejecución de sistema
+
   if (isAnOldMessage(message)) return;
-  const client = await getClient(clientName);
+
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
-    changeUserData(clientName, message.from, "botPaused", false);
-    return `Bienvenido/a de nuevo.\n\n${showMenu(client)}`;
+    await changeUserData(clientName, message.from, "botPaused", false);
+    return `Bienvenido/a de nuevo.\n\n${showOptions(client.menu.options)}`;
   }
+
   if (session.botPaused) return;
 
-  //Normalizo el texto del mensaje del usuario
+  // Normalizo el texto del mensaje del usuario
   const normalizedText = message.body.toLowerCase().trim();
 
-  if (session.currentNode != "null") {
-    const resolved = await resolveNode(client, session, normalizedText);
-    if (resolved) return resolved;
+  const nextNode =
+    session.currentNode === "null"
+      ? normalizedText
+      : `${session.currentNode}.${normalizedText}`;
+
+  const suboptions = getNestedValue(client.menu.options, nextNode);
+
+  if (!suboptions) {
+    return `${
+      client.menu.default || "⚠ No entendí tu respuesta."
+    }\n\n${showOptions(client.menu.options)}`;
   }
 
-  //Si la palabra es la asignada para mostrar el menu, entonces devuelvo la lista de menu
-  const [[triggerKey, triggerValue]] = Object.entries(
-    client.menu?.showMenu || {}
+  session.currentNode = nextNode;
+  await changeUserData(
+    clientName,
+    message.from,
+    "currentNode",
+    session.currentNode
   );
 
-  if (normalizedText === triggerKey.toLowerCase().trim())
-    return showMenu(client);
-
-  // ✅ Si coincide con una opción directa traigo los datos de esa opcion
-  const option = client.menu.options?.[normalizedText];
-
-  // Si el tipo de opcion es estatica lo manejo con handleStatic
-  if (option && option.type === "static") {
-    return handleStatic(option);
+  if (suboptions?.type === "submenu") {
+    return `${suboptions.response}\n\n${showOptions(suboptions.options)}`;
   }
 
-  if (option && option.type === "submenu") {
-    await changeUserData(
-      clientName,
-      message.from,
-      "currentNode",
-      normalizedText
-    );
-    return handleSubmenu(option);
+  if (suboptions?.type === "static") {
+    await changeUserData(clientName, message.from, "currentNode", null);
+    return suboptions.response;
   }
 
-  // 🔍 Si coincide con alguna keyword
+  // 🟥🟥🟥 LÓGICA DE KEYWORDS 🟥🟥🟥
   for (const [optionKey, keywordList] of Object.entries(client.keywords)) {
     const match = keywordList.some((keyword) =>
       normalizedText.includes(keyword.toLowerCase())
@@ -106,20 +84,22 @@ const getDynamicResponse = async (clientName, message, session) => {
   }
 
   // ❌ Si no hay coincidencias
-  return client.menu.default || "⚠ No entendí tu respuesta.";
+  return `${
+    client.menu.default || "⚠ No entendí tu respuesta."
+  }\n\n${showOptions(client.menu.options)}`;
 };
 
-const handleStatic = (option) => {
-  return option.response || "⚠ No hay respuesta definida.";
-};
+// const handleStatic = (option) => {
+//   return option.response || "⚠ No hay respuesta definida.";
+// };
 
-const handleSubmenu = (option) => {
-  const subHints = Object.entries(option.suboptions || {})
-    .map(([key, val]) => `*${key}*: ${val.response}`)
-    .join("\n");
+// const handleSubmenu = (option) => {
+//   const subHints = Object.entries(option.suboptions || {})
+//     .map(([key, val]) => `*${key}*: ${val.response}`)
+//     .join("\n");
 
-  return `${option.response}\n\n${subHints}`;
-};
+//   return `${option.response}\n\n${subHints}`;
+// };
 
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
