@@ -5,15 +5,19 @@ import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import { getAllClients } from "./clientsService.js";
 import { handleMessage } from "../handlers/messageHandler.js";
+import { waitingConfirmation } from "../utils/toolkit.js";
 const { Client, LocalAuth } = pkg;
 
-const initializeService = () => {
+const initializeService = async () => {
   //Trae todos los clientes de nuestro sistema
-  const clientsConfig = getAllClients();
+  const clientsConfig = await getAllClients();
 
-  Object.entries(clientsConfig).forEach(([clientId, config]) => {
+  Object.entries(clientsConfig).forEach(([clientId, clientData]) => {
     //Si el cliente no está activo, no generamos QR (Sirve para dar de baja clientes)
-    if (!config.active) return;
+
+    if (!clientData.active) return;
+
+    const sanitizedClientName = clientData.name.toLowerCase().trim().replace(" ", "_");
 
     //Crea cliente para configurar
     const client = new Client({
@@ -22,6 +26,7 @@ const initializeService = () => {
 
     client.on("qr", (qr) => {
       console.log(`\n🔗 QR para cliente ${config.name}\n`);
+      console.log(`Implementar envío de QR al mail ${config?.mail} AQUI \n`)
       qrcode.generate(qr, { small: true });
       console.log(
         `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
@@ -38,13 +43,10 @@ const initializeService = () => {
     });
 
     client.on("message", async (message) => {
-      //message.body → el texto del mensaje | message.from → el número del cliente | message.reply() → para responder
-      //clientId → Es la clave que identifica al cliente en clients.json. Ejemplo: "client1", "client2", (NO el nombre) etc.
-      //clientsConfig[clientId] → Es el objeto de configuración completo de ese cliente. Incluye: name menu keywords active
-      handleMessage(message, clientId, clientsConfig[clientId]);
+      handleMessage(message, sanitizedClientName, clientData);
     });
 
-    client.initialize(); // No se espera, se lanza y los eventos se gestionan solos
+    client.initialize();
   });
 };
 
