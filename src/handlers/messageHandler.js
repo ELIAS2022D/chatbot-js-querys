@@ -1,9 +1,5 @@
 import { changeUserData, getUserSession } from "../services/sessionsService.js";
-import {
-  hasBeenLongEnough,
-  isAnOldMessage,
-  waitingConfirmation,
-} from "../utils/toolkit.js";
+import { hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from "../utils/toolkit.js";
 import { getClient } from "../services/clientsService.js";
 
 const showOptions = (options) => {
@@ -31,7 +27,6 @@ const getDynamicResponse = async (clientName, message, session) => {
   const client = await getClient(clientName); // Debería llamarse una vez por ejecución de sistema
 
   if (isAnOldMessage(message)) return;
-
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     await changeUserData(clientName, message.from, "botPaused", false);
     return `Bienvenido/a de nuevo.\n\n${showOptions(client.menu.options)}`;
