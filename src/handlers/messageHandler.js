@@ -5,6 +5,7 @@ import {
   isAnOldMessage,
   waitingConfirmation,
 } from "../utils/toolkit.js";
+import { getKeywordHint } from "./keywordHandler.js";
 
 const resetSessionData = () => {
   //TO DO: Realizar una función que reinicie los datos dinamicos del usuario si hace mucho que no manda nada.
@@ -69,7 +70,7 @@ const handleInputProgress = async (client, clientName, message, session, option)
   return `✅ Datos recibidos:\n\n${resumen}\n\nGracias por tu consulta.`;
 };
 
-const showOptions = (options) => {
+export const showOptions = (options) => {
   if (!options) return "⚠ Este cliente no tiene opciones configuradas.";
 
   const hints = Object.entries(options)
@@ -98,7 +99,6 @@ const getDynamicResponse = async (clientName, message, session, client) => {
     return `Bienvenido/a de nuevo.\n\n${showOptions(client.menu.options)}`;
   }
 
-  // Normalizo el texto del mensaje del usuario
   const normalizedText = message.body.toLowerCase().trim();
 
   if (session.inputFlow) {
@@ -107,16 +107,19 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   }
 
   // Si el usuario aun no entró en un flujo de menúes, asignamos el valor ingresado en nextNode
-  const nextNode =
-    session.currentNode === "null"
-      ? normalizedText
-      : `${session.currentNode}.${normalizedText}`;
-
+  const nextNode = session.currentNode === "null" ? normalizedText : `${session.currentNode}.${normalizedText}`;
   // Función que evalúa si la opcion enviada por el usuario coincide con una respuesta valida
   const options = getNestedValue(client.menu.options, nextNode);
 
   //Si no hay opciones significa que lo que mandó el usuario está equivocado o no existen las opciones aún
   if (!options) {
+    if (session.currentNode == "null") {
+
+      // 🟥 Lógica de Keywords
+      const keywordHint = getKeywordHint(client, normalizedText);
+      if (keywordHint) return keywordHint;
+    }
+
     const currentPath = session.currentNode;
     const currentNode = getNestedValue(client.menu.options, currentPath);
     const fallbackOptions =
@@ -142,21 +145,6 @@ const getDynamicResponse = async (clientName, message, session, client) => {
       return await handleInputStart(clientName, message, options, nextNode);
     }
   }
-
-  // 🟥🟥🟥 LÓGICA DE KEYWORDS 🟥🟥🟥
-  for (const [optionKey, keywordList] of Object.entries(client.keywords)) {
-    const match = keywordList.some((keyword) =>
-      normalizedText.includes(keyword.toLowerCase())
-    );
-
-    if (match && client.menu.options[optionKey]) {
-      return client.menu.options[optionKey].hint;
-    }
-  }
-
-  // ❌ Si no hay coincidencias
-  return `${client.menu.default || "⚠ No entendí tu respuesta."
-    }\n\n${showOptions(client.menu.options)}`;
 };
 
 const handleMessage = async (message, clientName, clientData) => {
@@ -164,7 +152,7 @@ const handleMessage = async (message, clientName, clientData) => {
   if (isAnOldMessage(message) || session.botPaused) return;
 
   if (isAdmin(clientData.admin, message.from)) {
-    console.log("Es Admin");
+    // console.log("Es Admin");
     // return (replyText = await getDynamicResponseAdmin());
   }
 
