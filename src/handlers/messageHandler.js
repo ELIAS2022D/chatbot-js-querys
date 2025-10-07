@@ -14,6 +14,58 @@ const isAdmin = (adminPhone, userPhone) => {
   return adminPhone === formatCellphoneNumber(userPhone);
 };
 
+const handleInputStart = async (clientName, message, option, nextNode) => {
+  const inputKeys = Object.keys(option.inputs || {});
+  if (inputKeys.length === 0) {
+    await changeUserData(clientName, message.from, "currentNode", null);
+    return "⚠ No hay campos definidos para esta consulta.";
+  }
+
+  await changeUserData(clientName, message.from, "inputFlow", {
+    path: nextNode,
+    keys: inputKeys,
+    index: 0,
+    values: {},
+  });
+
+  return option.inputs[inputKeys[0]].prompt;
+};
+
+const handleInputProgress = async (client, clientName, message, session) => {
+  const { path, keys, index, values } = session.inputFlow;
+  const currentKey = keys[index];
+  const currentField = getNestedValue(client.menu.options, path)?.inputs?.[currentKey];
+
+  const inputValue = message.body.trim();
+  const updatedValues = { ...values, [currentKey]: inputValue };
+
+  if (currentField.required && !inputValue) {
+    return `⚠ Este campo es obligatorio: ${currentField.prompt}`;
+  }
+
+  if (index + 1 < keys.length) {
+    await changeUserData(clientName, message.from, "inputFlow", {
+      path,
+      keys,
+      index: index + 1,
+      values: updatedValues,
+    });
+
+    const nextKey = keys[index + 1];
+    const nextPrompt = getNestedValue(client.menu.options, path)?.inputs?.[nextKey]?.prompt;
+    return nextPrompt || "⚠ Siguiente campo no definido.";
+  }
+
+  await changeUserData(clientName, message.from, "inputFlow", null);
+  await changeUserData(clientName, message.from, "currentNode", null);
+
+  const resumen = Object.entries(updatedValues)
+    .map(([k, v]) => `*${k}*: ${v}`)
+    .join("\n");
+
+  return `✅ Datos recibidos:\n\n${resumen}\n\nGracias por tu consulta.`;
+};
+
 const showOptions = (options) => {
   if (!options) return "⚠ Este cliente no tiene opciones configuradas.";
 
@@ -46,6 +98,10 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   // Normalizo el texto del mensaje del usuario
   const normalizedText = message.body.toLowerCase().trim();
 
+  if (session.inputFlow) {
+    return await handleInputProgress(client, clientName, message, session);
+  }
+
   // Si el usuario aun no entró en un flujo de menúes, asignamos el valor ingresado en nextNode
   const nextNode =
     session.currentNode === "null"
@@ -59,24 +115,16 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   if (!options) {
     const currentPath = session.currentNode;
     const currentNode = getNestedValue(client.menu.options, currentPath);
-
     const fallbackOptions =
       currentNode?.type === "submenu"
         ? showOptions(currentNode.options)
         : showOptions(client.menu.options);
 
-    return `${
-      client.menu.default || "⚠ No entendí tu respuesta."
-    }\n\n${fallbackOptions}`;
+    return `${client.menu.default || "⚠ No entendí tu respuesta."}\n\n${fallbackOptions}`;
   }
 
   session.currentNode = nextNode;
-  await changeUserData(
-    clientName,
-    message.from,
-    "currentNode",
-    session.currentNode
-  );
+  await changeUserData(clientName, message.from, "currentNode", session.currentNode);
 
   switch (options?.type) {
     case "static": {
@@ -87,24 +135,7 @@ const getDynamicResponse = async (clientName, message, session, client) => {
       return `${options.response}\n\n${showOptions(options.options)}`;
     }
     case "input": {
-      const inputKeys = Object.keys(options.inputs || {});
-
-      if (inputKeys.length === 0) {
-        await changeUserData(clientName, message.from, "currentNode", null);
-        return (
-          client.menu.default || "⚠ No hay campos definidos para esta consulta."
-        );
-      }
-
-      // Iniciar flujo de inputs
-      await changeUserData(clientName, message.from, "inputFlow", {
-        path: nextNode,
-        keys: inputKeys,
-        index: 0,
-        values: {},
-      });
-
-      return options.inputs[inputKeys[0]];
+      return await handleInputStart(clientName, message, options, nextNode);
     }
   }
 
@@ -120,9 +151,8 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   }
 
   // ❌ Si no hay coincidencias
-  return `${
-    client.menu.default || "⚠ No entendí tu respuesta."
-  }\n\n${showOptions(client.menu.options)}`;
+  return `${client.menu.default || "⚠ No entendí tu respuesta."
+    }\n\n${showOptions(client.menu.options)}`;
 };
 
 const handleMessage = async (message, clientName, clientData) => {
