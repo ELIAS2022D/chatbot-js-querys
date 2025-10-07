@@ -21,20 +21,24 @@ const handleInputStart = async (clientName, message, option, nextNode) => {
     return "⚠ No hay campos definidos para esta consulta.";
   }
 
-  await changeUserData(clientName, message.from, "inputFlow", {
-    path: nextNode,
+  await changeUserData(clientName, message.from, "inputFlow", JSON.stringify({
     keys: inputKeys,
     index: 0,
-    values: {},
-  });
+    values: {}
+  }));
 
   return option.inputs[inputKeys[0]].prompt;
 };
 
-const handleInputProgress = async (client, clientName, message, session) => {
-  const { path, keys, index, values } = session.inputFlow;
+const handleInputProgress = async (client, clientName, message, session, option) => {
+  const { keys, index, values } = session.inputFlow;
   const currentKey = keys[index];
-  const currentField = getNestedValue(client.menu.options, path)?.inputs?.[currentKey];
+  const currentField = option.inputs?.[currentKey];
+
+  if (!currentField) {
+    await changeUserData(clientName, message.from, "inputFlow", null);
+    return "⚠ Campo no definido. Se canceló la carga.";
+  }
 
   const inputValue = message.body.trim();
   const updatedValues = { ...values, [currentKey]: inputValue };
@@ -44,15 +48,14 @@ const handleInputProgress = async (client, clientName, message, session) => {
   }
 
   if (index + 1 < keys.length) {
-    await changeUserData(clientName, message.from, "inputFlow", {
-      path,
+    await changeUserData(clientName, message.from, "inputFlow", JSON.stringify({
       keys,
       index: index + 1,
-      values: updatedValues,
-    });
+      values: updatedValues
+    }));
 
     const nextKey = keys[index + 1];
-    const nextPrompt = getNestedValue(client.menu.options, path)?.inputs?.[nextKey]?.prompt;
+    const nextPrompt = option.inputs?.[nextKey]?.prompt;
     return nextPrompt || "⚠ Siguiente campo no definido.";
   }
 
@@ -99,7 +102,8 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   const normalizedText = message.body.toLowerCase().trim();
 
   if (session.inputFlow) {
-    return await handleInputProgress(client, clientName, message, session);
+    const option = getNestedValue(client.menu.options, session.currentNode);
+    return await handleInputProgress(client, clientName, message, session, option);
   }
 
   // Si el usuario aun no entró en un flujo de menúes, asignamos el valor ingresado en nextNode

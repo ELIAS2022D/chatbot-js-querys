@@ -32,12 +32,13 @@ const userExist = async (clientName, cellphone) => {
   return Object.keys(data).length > 0;
 };
 
-const parseUserSession = (rawUser) => {
+const parseUserSession = (rawUser) => { //Debemos actualizar esta función para que cargue los key values de forma automatica y no tener que estar haciendolo manualmente
   return {
     phone: rawUser.phone,
     lastMessage: Number(rawUser.lastMessage),
     botPaused: rawUser.botPaused === "true",
     currentNode: rawUser.currentNode,
+    inputFlow: rawUser.inputFlow ? JSON.parse(rawUser.inputFlow) : null
   };
 };
 
