@@ -6,6 +6,10 @@ import {
   waitingConfirmation,
 } from "../utils/toolkit.js";
 
+const resetSessionData = () => {
+  //TO DO: Realizar una función que reinicie los datos dinamicos del usuario si hace mucho que no manda nada.
+};
+
 const isAdmin = (adminPhone, userPhone) => {
   return adminPhone === formatCellphoneNumber(userPhone);
 };
@@ -20,7 +24,7 @@ const showOptions = (options) => {
   return hints.join("\n");
 };
 
-const getNestedValue = (obj, pathString) => {
+const getNestedValue = (obj, pathString) => { //Acá tengo que ajustar para que si es input, devuelva todas las keys de input que va a pedir el sistema
   const keys = pathString.split(".");
 
   return keys.reduce((acc, key, index) => {
@@ -39,19 +43,20 @@ const getDynamicResponse = async (clientName, message, session, client) => {
     return `Bienvenido/a de nuevo.\n\n${showOptions(client.menu.options)}`;
   }
 
-  if (session.botPaused) return;
-
   // Normalizo el texto del mensaje del usuario
   const normalizedText = message.body.toLowerCase().trim();
 
+  // Si el usuario aun no entró en un flujo de menúes, asignamos el valor ingresado en nextNode
   const nextNode =
     session.currentNode === "null"
       ? normalizedText
       : `${session.currentNode}.${normalizedText}`;
 
-  const suboptions = getNestedValue(client.menu.options, nextNode);
+  // Función que evalúa si la opcion enviada por el usuario coincide con una respuesta valida
+  const options = getNestedValue(client.menu.options, nextNode);
 
-  if (!suboptions) {
+  //Si no hay opciones significa que lo que mandó el usuario está equivocado o no existen las opciones aún
+  if (!options) {
     const currentPath = session.currentNode;
     const currentNode = getNestedValue(client.menu.options, currentPath);
 
@@ -73,17 +78,33 @@ const getDynamicResponse = async (clientName, message, session, client) => {
     session.currentNode
   );
 
-  switch (suboptions?.type) {
+  switch (options?.type) {
     case "static": {
       await changeUserData(clientName, message.from, "currentNode", null);
-      return suboptions.response;
+      return options.response;
     }
     case "submenu": {
-      return `${suboptions.response}\n\n${showOptions(suboptions.options)}`;
+      return `${options.response}\n\n${showOptions(options.options)}`;
     }
     case "input": {
-      console.log("Es tipo input");
-      //TO DO Implementar entradas de variables
+      const inputKeys = Object.keys(options.inputs || {});
+
+      if (inputKeys.length === 0) {
+        await changeUserData(clientName, message.from, "currentNode", null);
+        return (
+          client.menu.default || "⚠ No hay campos definidos para esta consulta."
+        );
+      }
+
+      // Iniciar flujo de inputs
+      await changeUserData(clientName, message.from, "inputFlow", {
+        path: nextNode,
+        keys: inputKeys,
+        index: 0,
+        values: {},
+      });
+
+      return options.inputs[inputKeys[0]];
     }
   }
 
@@ -106,13 +127,19 @@ const getDynamicResponse = async (clientName, message, session, client) => {
 
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
+  if (isAnOldMessage(message) || session.botPaused) return;
+
   if (isAdmin(clientData.admin, message.from)) {
     console.log("Es Admin");
     // return (replyText = await getDynamicResponseAdmin());
   }
 
-  const replyText = await getDynamicResponse(clientName,message,session,clientData);
-  if (isAnOldMessage(message)) return;
+  const replyText = await getDynamicResponse(
+    clientName,
+    message,
+    session,
+    clientData
+  );
   return message.reply(replyText);
 };
 
