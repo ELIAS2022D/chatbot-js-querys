@@ -117,6 +117,7 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   if (session.inputFlow) {
     if (normalizedText == client.menu.quit) return null;
     const option = getNestedValue(client.menu.options, session.currentNode);
+    console.log(`Option contiene: ${option}`);
     return await handleInputProgress(client, clientName, message, session, option);
   }
 
@@ -166,6 +167,8 @@ const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
   if (isAnOldMessage(message) || session.botPaused) return;
 
+  console.log(`Mensaje original: ${message}`)
+
   if (isAdmin(clientData.admin, message.from)) {
     // console.log("Es Admin");
     // return (replyText = await getDynamicResponseAdmin());
@@ -177,6 +180,7 @@ const handleMessage = async (message, clientName, clientData) => {
   if (replyText) {
     return message.reply(replyText);
   }
+  return;
 };
 
 export { handleMessage };

@@ -12,7 +12,7 @@ const initializeService = async () => {
   const clientsConfig = await getAllClients();
 
   Object.entries(clientsConfig).forEach(([clientId, clientData]) => {
-    if (!clientData.active) return;
+    if (clientData.active == false) return;
 
     const sanitizedClientName = clientData.name.toLowerCase().trim().replace(" ", "_");
 
