@@ -1,6 +1,7 @@
 import { changeUserData, getUserSession } from '../services/sessionsService.js';
 import { formatCellphoneNumber, hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from '../utils/toolkit.js';
 import { getKeywordHint } from './keywordHandler.js';
+import { handleApiCall } from '../api/apiHandler.js';
 
 const resetSessionData = async (clientName, message) => {
   await changeUserData(clientName, message.from, 'inputFlow', null);
@@ -29,7 +30,7 @@ const handleInputStart = async (clientName, message, option, nextNode) => {
     })
   );
 
-  return `${option.inputs[inputKeys[0]].prompt}\n\nEscribí *${client.menu.quit}* para regresar al menú principal`;
+  return option.inputs[inputKeys[0]].prompt;
 };
 
 const handleInputProgress = async (client, clientName, message, session, option) => {
@@ -70,14 +71,19 @@ const handleInputProgress = async (client, clientName, message, session, option)
 
   await resetSessionData(clientName, message);
 
-  const resumen = Object.entries(updatedValues)
+  const datos = Object.entries(updatedValues)
     .map(([k, v]) => `*${k}*: ${v}`)
     .join('\n');
 
-  return `✅ Datos recibidos:\n\n${resumen}\n\nGracias por tu consulta.`;
+  if (option.nextType === 'api') {
+    const response = await handleApiCall(option.apiName || currentKey, datos);
+    return response;
+  }
+
+  return `✅ Datos recibidos:\n\n${datos}\n\nGracias por tu consulta.`;
 };
 
-export const showOptions = (options) => {
+export const showOptions = options => {
   if (!options) return '⚠ Este cliente no tiene opciones configuradas.';
 
   const hints = Object.entries(options)
@@ -117,7 +123,6 @@ const getDynamicResponse = async (clientName, message, session, client) => {
   if (session.inputFlow) {
     if (normalizedText == client.menu.quit) return null;
     const option = getNestedValue(client.menu.options, session.currentNode);
-    console.log(`Option contiene: ${option}`);
     return await handleInputProgress(client, clientName, message, session, option);
   }
 
@@ -157,8 +162,14 @@ const getDynamicResponse = async (clientName, message, session, client) => {
       return await handleInputStart(clientName, message, options, nextNode);
     }
     case 'api': {
-      console.log('Implementacion de API');
-      return;
+      const inputFlow = typeof session.inputFlow === 'string' ? JSON.parse(session.inputFlow) : session.inputFlow;
+
+      const inputValues = inputFlow?.values || {};
+
+      const response = await handleApiCall(options.apiName || normalizedText, inputValues);
+
+      await resetSessionData(clientName, message);
+      return response;
     }
   }
 };
@@ -167,15 +178,12 @@ const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
   if (isAnOldMessage(message) || session.botPaused) return;
 
-  console.log(`Mensaje original: ${message}`)
-
   if (isAdmin(clientData.admin, message.from)) {
     // console.log("Es Admin");
     // return (replyText = await getDynamicResponseAdmin());
   }
 
   const replyText = await getDynamicResponse(clientName, message, session, clientData);
-  console.log(replyText);
 
   if (replyText) {
     return message.reply(replyText);

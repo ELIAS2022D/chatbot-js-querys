@@ -1,5 +1,4 @@
 export const getKeywordHint = (client, normalizedText) => {
-    console.log("Entro acá")
     for (const [optionKey, keywordList] of Object.entries(client.keywords)) {
         const match = keywordList.some((keyword) =>
             normalizedText.includes(keyword.toLowerCase())
