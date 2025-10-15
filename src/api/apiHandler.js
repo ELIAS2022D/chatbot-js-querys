@@ -1,36 +1,34 @@
-// apiHandler.js
-import fs from "fs";
-import { descargarPolizaCompletaRUS } from "../apiRus/rusService.js";
+import fs from 'fs';
+import { descargarPolizaCompletaRUS } from '../apiRus/rusService.js';
+import { obtenerPolizaPdf } from '../apiProvincia/polizaService.js';
 
 export const handleApiCall = async (apiName, inputData) => {
   switch (apiName) {
-    case "consultaAPI": {
+    case 'consultaAPI': {
       try {
-        const rutaArchivo = await descargarPolizaCompletaRUS(
-          4,
-          inputData.numPoliza,
-          ""
-        );
+        const response = await obtenerPolizaPdf(inputData.numPoliza);
 
-        // 🔹 Verificamos que el archivo exista
-        if (!fs.existsSync(rutaArchivo)) {
-          throw new Error("No se generó el archivo PDF");
+        if (response.error) {
+          return {
+            message: response.message,
+            error: true
+          };
         }
 
-        // ✅ Devolvemos un objeto con texto y path del PDF
         return {
           message: `📄 Tu póliza *${inputData.numPoliza}* fue descargada correctamente ✅`,
-          filePath: rutaArchivo,
+          fileBase64: response.toString('base64'),
+          mimeType: 'application/pdf',
+          fileName: `poliza_${inputData.numPoliza}.pdf`,
         };
       } catch (err) {
-        console.error("❌ Error al consultar póliza:", err.message);
+        console.error('❌ Error al consultar póliza:', err.message);
         return {
           message: `⚠ No se pudo descargar la póliza: ${err.message}`,
         };
       }
     }
-
-    case "cotizacion":
+    case 'cotizacion':
       return {
         message: `💰 Cotización generada:\n\nAuto: ${inputData.modelo}\nValor: $${inputData.valor}`,
       };

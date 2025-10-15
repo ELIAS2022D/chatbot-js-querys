@@ -10,7 +10,7 @@ const API_KEY = process.env.RUS_API_KEY_TEST;
 
 export async function descargarPolizaCompletaRUS(
   codRamo = 4, // fijo según tu necesidad
-  numPoliza,
+  numPoliza = "12694319",
   endoso = ''
 ) {
   // Obtener token antes de la llamada
@@ -35,6 +35,7 @@ export async function descargarPolizaCompletaRUS(
   }
 
   const arrayBuf = await pdfResp.arrayBuffer();
+  console.log(arrayBuf);
   // fs.writeFileSync(outputPath, Buffer.from(arrayBuf));
 
   return `✅ Póliza completa descargada.`;
