@@ -29,7 +29,7 @@ export async function obtenerTokenRUS() {
 
     const data = JSON.parse(text);
 
-    console.log("✅ Token obtenido correctamente:", data.access_token);
+    console.log("✅ Token obtenido correctamente");
     return data.access_token;
   } catch (err) {
     console.error("❌ Error al autenticar:", err.message);

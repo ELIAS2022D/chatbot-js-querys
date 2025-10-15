@@ -76,7 +76,7 @@ const handleInputProgress = async (client, clientName, message, session, option)
     .join('\n');
 
   if (option.nextType === 'api') {
-    const response = await handleApiCall(option.apiName || currentKey, datos);
+    const response = await handleApiCall(option.apiName || currentKey, updatedValues);
     return response;
   }
 
