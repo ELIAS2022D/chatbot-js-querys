@@ -1,7 +1,7 @@
 // rusService.js
 import fs from "fs";
 import fetch from "node-fetch";
-import { obtenerTokenRUS } from "./obtencionTokenRus.js"
+import { obtenerTokenRUS } from "../apiRus/obtencionTokenRus.js"
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -38,7 +38,8 @@ export async function descargarPolizaCompletaRUS(
   }
 
   const arrayBuf = await pdfResp.arrayBuffer();
-  //fs.writeFileSync(outputPath, Buffer.from(arrayBuf));
+  fs.writeFileSync(outputPath, Buffer.from(arrayBuf));
 
-  return `✅ Póliza completa descargada.`;
+  console.log(`✅ Póliza completa descargada: ${outputPath}`);
+  return outputPath;
 }
