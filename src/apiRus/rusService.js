@@ -1,31 +1,34 @@
 // rusService.js
-import fs from 'fs';
-import fetch from 'node-fetch';
-import { obtenerTokenRUS } from './obtencionTokenRus.js';
-import dotenv from 'dotenv';
+import fs from "fs";
+import fetch from "node-fetch";
+import { obtenerTokenRUS } from "./obtencionTokenRus.js"
+import dotenv from "dotenv";
 
 dotenv.config();
 const BASE_URL = process.env.RUS_BASE_URL_TEST;
 const API_KEY = process.env.RUS_API_KEY_TEST;
 
 export async function descargarPolizaCompletaRUS(
-  codRamo = 4, // fijo según tu necesidad
-  numPoliza = "12694319",
-  endoso = ''
+  codRamo,
+  numPoliza,
+  endoso = "", 
+  outputPath = null
 ) {
   // Obtener token antes de la llamada
   const token = await obtenerTokenRUS();
-  if (!token) throw new Error('No se pudo obtener token RUS.');
+  if (!token) throw new Error("No se pudo obtener token RUS.");
+
+  codRamo = 4; // fijo según tu necesidad
 
   const url = `${BASE_URL}/documentos/poliza-completa/${codRamo}/${numPoliza}`;
   console.log(`📡 GET → ${url}`);
 
   const pdfResp = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "x-api-key": API_KEY,
+      "Authorization": `Bearer ${token}`,
     },
   });
 
@@ -35,8 +38,7 @@ export async function descargarPolizaCompletaRUS(
   }
 
   const arrayBuf = await pdfResp.arrayBuffer();
-  console.log(arrayBuf);
-  // fs.writeFileSync(outputPath, Buffer.from(arrayBuf));
+  //fs.writeFileSync(outputPath, Buffer.from(arrayBuf));
 
   return `✅ Póliza completa descargada.`;
 }
