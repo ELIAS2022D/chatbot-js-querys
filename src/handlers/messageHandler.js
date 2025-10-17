@@ -1,3 +1,6 @@
+import whatsapp from 'whatsapp-web.js';
+const { MessageMedia } = whatsapp;
+
 import { changeUserData, getUserSession } from '../services/sessionsService.js';
 import { formatCellphoneNumber, hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from '../utils/toolkit.js';
 import { getKeywordHint } from './keywordHandler.js';
@@ -77,6 +80,10 @@ const handleInputProgress = async (client, clientName, message, session, option)
 
   if (option.nextType === 'api') {
     const response = await handleApiCall(option.apiName || currentKey, updatedValues);
+    if(response.error == true){
+      return `${response.message}\n\n${showOptions(client.menu.options)}`
+    }
+    
     return response;
   }
 
@@ -163,13 +170,40 @@ const getDynamicResponse = async (clientName, message, session, client) => {
     }
     case 'api': {
       const inputFlow = typeof session.inputFlow === 'string' ? JSON.parse(session.inputFlow) : session.inputFlow;
-
       const inputValues = inputFlow?.values || {};
 
-      const response = await handleApiCall(options.apiName || normalizedText, inputValues);
-
+      const apiResponse = await handleApiCall(options.apiName || normalizedText, inputValues);
       await resetSessionData(clientName, message);
-      return response;
+
+      // Si la respuesta es un texto plano, devolvemos normal
+      if (typeof apiResponse === 'string') return apiResponse;
+
+      // Si la respuesta viene estructurada con archivo
+      if (typeof apiResponse === 'object') {
+        const { message: apiMessage, filePath } = apiResponse;
+
+        // ✅ Enviar mensaje informativo
+        await message.reply(apiMessage);
+
+        // ✅ Si hay PDF adjunto, lo enviamos por WhatsApp
+        if (filePath) {
+          try {
+            await message.client.sendMessage(message.from, {
+              document: filePath,
+              caption: '📎 Aquí tenés tu póliza en PDF.',
+              mimetype: 'application/pdf',
+            });
+          } catch (err) {
+            console.error('❌ Error enviando PDF:', err.message);
+            return '⚠ No se pudo enviar el archivo PDF. Por favor, intentá más tarde.';
+          }
+        }
+
+        // No retornamos nada más porque ya enviamos el mensaje y el archivo
+        return null;
+      }
+
+      return '⚠ Respuesta desconocida de la API.';
     }
   }
 };
@@ -183,12 +217,26 @@ const handleMessage = async (message, clientName, clientData) => {
     // return (replyText = await getDynamicResponseAdmin());
   }
 
-  const replyText = await getDynamicResponse(clientName, message, session, clientData);
+  const reply = await getDynamicResponse(clientName, message, session, clientData);
 
-  if (replyText) {
-    return message.reply(replyText);
+  if (!reply) return;
+
+  if (typeof reply === 'string') {
+    return message.reply(reply);
   }
-  return;
+
+  if (typeof reply === 'object') {
+    if (reply.fileBase64) {
+      await message.reply(reply.message);
+
+      const media = new MessageMedia(reply.mimeType, reply.fileBase64, reply.fileName);
+      return message.reply(media);
+    }
+
+    if (reply.message) {
+      return message.reply(reply.message); // ✅ este bloque es el que faltaba
+    }
+  }
 };
 
 export { handleMessage };

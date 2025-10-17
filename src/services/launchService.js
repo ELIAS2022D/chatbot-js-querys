@@ -30,7 +30,7 @@ const initializeService = async () => {
       } else {
         console.log("⚠️ No se encontró un mail configurado para este cliente");
       }
-
+      
       qrcode.generate(qr, { small: true });
     });
 
