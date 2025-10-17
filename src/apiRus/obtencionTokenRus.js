@@ -2,22 +2,23 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 dotenv.config();
 
-const url = "https://api.rus.com.ar/sandbox/login/token"; // sandbox oficial
-const apiKey = "QRxZOd7QUdasK5H3fcVJO6jsaqZuDPQS2kYVlNIf"; // tu API Key sandbox
-const username = process.env.RUS_USER_ANGEL_TEST; // usuario de prueba
-const password = process.env.RUS_PASS_ANGEL_TEST; // contraseña de prueba
+const BASE_URL = process.env.RUS_BASE_URL_TEST; // ej: https://api.rus.com.ar/sandbox
+const API_KEY = process.env.RUS_API_KEY_TEST;   // tu key sandbox o productiva
 
-export async function obtenerTokenRUS() {
+// 🔹 Acepta credenciales dinámicas (kevin, angel, etc.)
+export async function obtenerTokenRUS(user, pass) {
+  const url = `${BASE_URL}/login/token`;
+
   try {
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
+        "x-api-key": API_KEY,
       },
       body: JSON.stringify({
-        username,
-        password,
+        username: user,   // 👈 formato correcto según RUS
+        password: pass,   // 👈 formato correcto según RUS
       }),
     });
 
@@ -30,9 +31,9 @@ export async function obtenerTokenRUS() {
     const data = JSON.parse(text);
 
     console.log("✅ Token obtenido correctamente");
-    return data.access_token;
+    return data.access_token; // 👈 campo correcto del token
   } catch (err) {
-    console.error("❌ Error al autenticar:", err.message);
+    console.error("❌ Error al autenticar RUS:", err.message);
     throw err;
   }
 }
