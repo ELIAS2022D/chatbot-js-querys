@@ -5,26 +5,26 @@ import { obtenerTokenRUS } from "./obtencionTokenRus.js";
 
 dotenv.config();
 
-const BASE_URL = process.env.RUS_BASE_URL_TEST;
-const API_KEY = process.env.RUS_API_KEY_TEST;
+const BASE_URL = process.env.RUS_BASE_URL;
+const API_KEY = process.env.RUS_API_KEY;
 
 // Lista de productores configurados
 const productores = [
   {
     nombre: "kevin",
-    user: process.env.RUS_USER_KEVIN_TEST,
-    pass: process.env.RUS_PASS_KEVIN_TEST
+    user: process.env.RUS_USER_KEVIN,
+    pass: process.env.RUS_PASS_KEVIN
   },
   {
     nombre: "angel",
-    user: process.env.RUS_USER_ANGEL_TEST,
-    pass: process.env.RUS_PASS_ANGEL_TEST
+    user: process.env.RUS_USER_ANGEL,
+    pass: process.env.RUS_PASS_ANGEL
   }
 ];
 
 export async function descargarPolizaCompletaRUS(numPoliza) {
   const codRamo = 4; // fijo para autos u otro ramo según tu negocio
-  const urlBase = `${BASE_URL}/documentos/poliza-completa/${codRamo}/${numPoliza}`;
+  const urlBase = `${BASE_URL}/documentos/poliza-completa/${codRamo}/${numPoliza}?endoso=`;
 
   console.log(`🔄 Buscando productor correcto para póliza ${numPoliza}...`);
 

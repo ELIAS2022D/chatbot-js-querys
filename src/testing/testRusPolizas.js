@@ -4,11 +4,9 @@ dotenv.config();
 
 (async () => {
   try {
-    const codRamo = 4;
     const numPoliza = 12694319; // ejemplo, puede no estar autorizado en sandbox
-    const output = "./descargas/poliza_test.pdf";
 
-    await descargarPolizaCompletaRUS(codRamo, numPoliza, "", output);
+    await descargarPolizaCompletaRUS(numPoliza);
   } catch (error) {
     console.error("❌ Error en la prueba:", error.message);
   }

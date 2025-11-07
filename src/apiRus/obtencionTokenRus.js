@@ -2,8 +2,8 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 dotenv.config();
 
-const BASE_URL = process.env.RUS_BASE_URL_TEST; // ej: https://api.rus.com.ar/sandbox
-const API_KEY = process.env.RUS_API_KEY_TEST;   // tu key sandbox o productiva
+const BASE_URL = process.env.RUS_BASE_URL;
+const API_KEY = process.env.RUS_API_KEY;
 
 // 🔹 Acepta credenciales dinámicas (kevin, angel, etc.)
 export async function obtenerTokenRUS(user, pass) {
