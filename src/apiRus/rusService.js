@@ -24,8 +24,9 @@ const productores = [
 
 export async function descargarPolizaCompletaRUS(numPoliza) {
   const codRamo = 4; // fijo para autos u otro ramo según tu negocio
-  const urlBase = `${BASE_URL}/documentos/poliza-completa/${codRamo}/${numPoliza}?endoso=`;
+  const urlBase = `${BASE_URL}/documentos/poliza-completa/${codRamo}/${numPoliza}?endoso=0`;
 
+  console.log(urlBase);
   console.log(`🔄 Buscando productor correcto para póliza ${numPoliza}...`);
 
   // Probar productor por productor
