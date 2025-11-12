@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { descargarPolizaCompletaRUS } from '../apiRus/rusService.js';
+import { descargarPolizaCompletaRUS } from '../apiRus/polizaService.js';
 import { obtenerPolizaPdf } from '../apiProvincia/polizaService.js';
 
 export const handleApiCall = async (apiName, inputData) => {

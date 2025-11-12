@@ -7,7 +7,7 @@
 // ---------------------------------------------------------
 
 import fetch from 'node-fetch';
-import { obtenerTokenProductor } from './provinciaService.js';
+import { obtenerTokenProductor } from './obtencionTokenProv.js';
 
 // Endpoint oficial (usar PROD o TEST según necesidad)
 const API_URL = 'https://apimprod.provinciaseguros.com.ar/PS/PS-NOVEDADES/3.0';
