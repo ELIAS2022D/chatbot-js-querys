@@ -124,7 +124,7 @@ const getDynamicResponse = async (clientName, message, session, client) => {
 
   if (normalizedText === client.menu.quit && session.currentNode != null) {
     await resetSessionData(clientName, message);
-    return `Volviendo al menú principal...\n\n${showOptions(client.menu.options)}`;
+    return `👈👈Volviendo al menú principal...\n\n${showOptions(client.menu.options)}`;
   }
 
   if (session.inputFlow) {
