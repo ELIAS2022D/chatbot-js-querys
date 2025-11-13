@@ -117,7 +117,7 @@ const getNestedValue = (obj, pathString) => {
 const getDynamicResponse = async (clientName, message, session, client) => {
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     await changeUserData(clientName, message.from, 'botPaused', false);
-    return `Bienvenido/a de nuevo.\n\n${showOptions(client.menu.options)}`;
+    return `👋Bienvenido/a de nuevo.\n\n${showOptions(client.menu.options)}`;
   }
 
   const normalizedText = message.body.toLowerCase().trim();

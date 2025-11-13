@@ -34,7 +34,7 @@ export const handleApiCall = async (apiName, inputData) => {
         const pdfBuffer = await descargarPolizaCompletaRUS(inputData.numPoliza);
 
         // Verificamos que haya devuelto un Buffer válido
-        if (!pdfBuffer || !(pdfBuffer instanceof Buffer)) {
+        if (!pdfBuffer || pdfBuffer.error) {
           throw new Error("Respuesta inválida al descargar la póliza RUS");
         }
 
