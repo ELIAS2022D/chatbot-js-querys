@@ -117,7 +117,7 @@ const getNestedValue = (obj, pathString) => {
 const getDynamicResponse = async (clientName, message, session, client) => {
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     await changeUserData(clientName, message.from, 'botPaused', false);
-    return `👋Bienvenido/a de nuevo. Elija una opción del menú principal.\n\n🤖 Para regresar al menú ingrese *volver*\n\n${showOptions(client.menu.options)}`;
+    return `👋Bienvenido/a de nuevo. Elija una opción del menú principal.\n\n🤖 Para regresar al menú ingrese *volver*\n\n🤖 Escriba *pausar* o *reactivar* el bot y chatear libremente con un asesor.\n\n${showOptions(client.menu.options)}`;
   }
 
   const normalizedText = message.body.toLowerCase().trim();
@@ -210,7 +210,37 @@ const getDynamicResponse = async (clientName, message, session, client) => {
 
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
-  if (isAnOldMessage(message) || session.botPaused) return;
+  const text = message.body.toLowerCase().trim();
+
+  // --------------------------------------
+  // ⛔ PAUSAR EL BOT
+  // --------------------------------------
+  if (text === "pausar") {
+    await changeUserData(clientName, message.from, "botPaused", true);
+    return message.reply("🤖 Bot pausado. Ahora pueden chatear libremente.");
+  }
+
+  // --------------------------------------
+  // ⚡ REACTIVAR EL BOT
+  // --------------------------------------
+  if (text === "reactivar") {
+    await changeUserData(clientName, message.from, "botPaused", false);
+    return message.reply("🤖 Bot reactivado. Vuelve a funcionar normalmente.");
+  }
+
+  // --------------------------------------
+  // 🛑 SI EL BOT ESTÁ PAUSADO → NO RESPONDE
+  // --------------------------------------
+  if (session.botPaused) return;
+
+  // --------------------------------------
+  // 🕒 SI EL MENSAJE ES VIEJO → NO RESPONDE
+  // --------------------------------------
+  if (isAnOldMessage(message)) return;
+
+  // --------------------------------------
+  // RESTO DE TU LÓGICA ORIGINAL
+  // --------------------------------------
 
   if (isAdmin(clientData.admin, message.from)) {
     // console.log("Es Admin");
@@ -234,7 +264,7 @@ const handleMessage = async (message, clientName, clientData) => {
     }
 
     if (reply.message) {
-      return message.reply(reply.message); // ✅ este bloque es el que faltaba
+      return message.reply(reply.message);
     }
   }
 };
