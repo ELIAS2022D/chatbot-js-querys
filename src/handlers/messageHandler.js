@@ -211,7 +211,19 @@ const getDynamicResponse = async (clientName, message, session, client) => {
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
   const text = message.body.toLowerCase().trim();
+  
+  // --------------------------------------
+  // 🚫 BLOQUEAR NÚMEROS BANEADOS
+  // --------------------------------------
+  const cleanNumber = formatCellphoneNumber(message.from);
 
+  if (clientData.bannedNumbers?.includes(cleanNumber)) {
+    // Si querés que NO responda nada:
+    return;
+
+    // Si querés enviar un mensaje avisando, reemplazá por:
+    // return message.reply("🚫 No estás autorizado para usar este servicio.");
+  }
   // --------------------------------------
   // ⛔ PAUSAR EL BOT
   // --------------------------------------
