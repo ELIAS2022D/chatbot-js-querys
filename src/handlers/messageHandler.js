@@ -250,13 +250,94 @@ const handleMessage = async (message, clientName, clientData) => {
   // --------------------------------------
   if (isAnOldMessage(message)) return;
 
-  // --------------------------------------
-  // RESTO DE TU LÓGICA ORIGINAL
-  // --------------------------------------
-
+  // ==============================
+  // ⚙️ ADMIN — EDICIÓN SIMPLE DEL MENÚ
+  // ==============================
   if (isAdmin(clientData.admin, message.from)) {
-    // console.log("Es Admin");
-    // return (replyText = await getDynamicResponseAdmin());
+    const text = message.body.trim().toLowerCase();
+    const menu = clientData.menu;
+
+    // ======================================================
+    // 1. CAMBIAR BIENVENIDA
+    // ======================================================
+    if (text.startsWith("cambiar bienvenida a:")) {
+      const newWelcome = message.body.split(":")[1].trim();
+
+      menu.welcome = newWelcome;
+      await changeUserData(clientName, message.from, "menu", menu);
+
+      return message.reply("✅ La bienvenida fue actualizada.");
+    }
+
+    // ======================================================
+    // 2. CAMBIAR RESPUESTA DE UNA OPCIÓN
+    // Ejemplo: cambiar respuesta de 'ayuda' a: nuevo texto
+    // ======================================================
+    if (text.startsWith("cambiar respuesta de")) {
+      const optionName = text.split("cambiar respuesta de")[1]
+        .split("a:")[0]
+        .trim()
+        .replace(/'/g, "")
+        .replace(/"/g, "");
+
+      const newResponse = message.body.split("a:")[1].trim();
+
+      if (!menu.options[optionName]) {
+        return message.reply(`⚠ La opción '${optionName}' no existe.`);
+      }
+
+      menu.options[optionName].response = newResponse;
+
+      await changeUserData(clientName, message.from, "menu", menu);
+
+      return message.reply(`✅ La respuesta de '${optionName}' fue actualizada.`);
+    }
+
+    // ======================================================
+    // 3. CAMBIAR HINT DE UNA OPCIÓN
+    // ======================================================
+    if (text.startsWith("cambiar hint de")) {
+      const optionName = text.split("cambiar hint de")[1]
+        .split("a:")[0]
+        .trim()
+        .replace(/'/g, "")
+        .replace(/"/g, "");
+
+      const newHint = message.body.split("a:")[1].trim();
+
+      if (!menu.options[optionName]) {
+        return message.reply(`⚠ La opción '${optionName}' no existe.`);
+      }
+
+      menu.options[optionName].hint = newHint;
+
+      await changeUserData(clientName, message.from, "menu", menu);
+
+      return message.reply(`✅ El hint de '${optionName}' fue actualizado.`);
+    }
+
+    // ======================================================
+    // 4. CAMBIAR TEXTO DE SUBMENÚ (response)
+    // ======================================================
+    if (text.startsWith("cambiar texto de")) {
+      const optionName = text.split("cambiar texto de")[1]
+        .split("a:")[0]
+        .trim()
+        .replace(/'/g, "")
+        .replace(/"/g, "");
+
+      const newText = message.body.split("a:")[1].trim();
+
+      if (!menu.options[optionName]) {
+        return message.reply(`⚠ La opción '${optionName}' no existe.`);
+      }
+
+      menu.options[optionName].response = newText;
+
+      await changeUserData(clientName, message.from, "menu", menu);
+
+      return message.reply(`📝 El texto de '${optionName}' fue actualizado.`);
+    }
   }
 
   const reply = await getDynamicResponse(clientName, message, session, clientData);
