@@ -1,6 +1,7 @@
 import whatsapp from 'whatsapp-web.js';
 const { MessageMedia } = whatsapp;
 
+import { saveClientMenu } from '../services/clientsService.js';
 import { changeUserData, getUserSession } from '../services/sessionsService.js';
 import { formatCellphoneNumber, hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from '../utils/toolkit.js';
 import { getKeywordHint } from './keywordHandler.js';
@@ -257,6 +258,33 @@ const handleMessage = async (message, clientName, clientData) => {
     const text = message.body.trim().toLowerCase();
     const menu = clientData.menu;
 
+    // ================================================
+    // 📌 VER QUÉ COSAS PUEDE CAMBIAR EL ADMIN
+    // Comando: "ver opciones"
+    // ================================================
+    if (text === "admin") {
+
+      const adminName = clientData.name || clientName;
+
+      const editable =
+        `Bienvenido Admin de *${adminName}* 🛠\n` +
+        `Aquí tiene sus opciones disponibles para su edición:\n\n` +
+
+        "1️⃣ *Cambiar bienvenida*\n" +
+        "   ➤ escribir: cambiar bienvenida a: TU_TEXTO\n\n" +
+
+        "2️⃣ *Cambiar la respuesta de una opción*\n" +
+        "   ➤ escribir: cambiar respuesta de 'NOMBRE_OPCION' a: TU_TEXTO\n\n" +
+
+        "3️⃣ *Cambiar el texto del hint (texto corto del menú)*\n" +
+        "   ➤ escribir: cambiar hint de 'NOMBRE_OPCION' a: TU_TEXTO\n\n" +
+
+        "4️⃣ *Cambiar el texto principal de un submenú*\n" +
+        "   ➤ escribir: cambiar texto de 'NOMBRE_OPCION' a: TU_TEXTO\n\n";
+
+      return message.reply(editable);
+    }
+
     // ======================================================
     // 1. CAMBIAR BIENVENIDA
     // ======================================================
@@ -264,7 +292,9 @@ const handleMessage = async (message, clientName, clientData) => {
       const newWelcome = message.body.split(":")[1].trim();
 
       menu.welcome = newWelcome;
-      await changeUserData(clientName, message.from, "menu", menu);
+
+      await saveClientMenu(clientName, menu);
+      clientData.menu = menu; // actualizar en memoria
 
       return message.reply("✅ La bienvenida fue actualizada.");
     }
@@ -288,7 +318,8 @@ const handleMessage = async (message, clientName, clientData) => {
 
       menu.options[optionName].response = newResponse;
 
-      await changeUserData(clientName, message.from, "menu", menu);
+      await saveClientMenu(clientName, menu);
+      clientData.menu = menu; // actualizar en memoria
 
       return message.reply(`✅ La respuesta de '${optionName}' fue actualizada.`);
     }
@@ -311,7 +342,8 @@ const handleMessage = async (message, clientName, clientData) => {
 
       menu.options[optionName].hint = newHint;
 
-      await changeUserData(clientName, message.from, "menu", menu);
+      await saveClientMenu(clientName, menu);
+      clientData.menu = menu; // actualizar en memoria
 
       return message.reply(`✅ El hint de '${optionName}' fue actualizado.`);
     }
@@ -334,7 +366,8 @@ const handleMessage = async (message, clientName, clientData) => {
 
       menu.options[optionName].response = newText;
 
-      await changeUserData(clientName, message.from, "menu", menu);
+      await saveClientMenu(clientName, menu);
+      clientData.menu = menu; // actualizar en memoria
 
       return message.reply(`📝 El texto de '${optionName}' fue actualizado.`);
     }

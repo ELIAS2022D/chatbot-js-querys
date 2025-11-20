@@ -96,6 +96,27 @@ const changeClientData = async (clientName, path, value) => {
   }
 };
 
+export const saveClientMenu = async (clientName, newMenu) => {
+  try {
+    const key = `client:${clientName}`;
+
+    // Obtener el cliente completo desde redis
+    const raw = await redisClient.get(key);
+    if (!raw) return;
+
+    const client = JSON.parse(raw);
+
+    // Reemplazar solo el menú
+    client.menu = newMenu;
+
+    // Guardar nuevamente todo el JSON del cliente
+    await redisClient.set(key, JSON.stringify(client));
+
+  } catch (error) {
+    console.error("Error al guardar el menú del cliente:", error);
+  }
+};
+
 export {
   createClient,
   clientExist,
