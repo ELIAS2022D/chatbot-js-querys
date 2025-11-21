@@ -117,6 +117,26 @@ export const saveClientMenu = async (clientName, newMenu) => {
   }
 };
 
+export const saveClientBannedNumbers = async (clientName, bannedNumbers) => {
+  try {
+    const key = `client:${clientName}`;
+
+    // Obtener cliente completo
+    const raw = await redisClient.get(key);
+    if (!raw) return;
+
+    const client = JSON.parse(raw);
+
+    // Guardar solo bannedNumbers
+    client.bannedNumbers = bannedNumbers;
+
+    await redisClient.set(key, JSON.stringify(client));
+
+  } catch (error) {
+    console.error("Error al guardar bannedNumbers:", error);
+  }
+};
+
 export {
   createClient,
   clientExist,

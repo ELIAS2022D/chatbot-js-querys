@@ -1,7 +1,7 @@
 import whatsapp from 'whatsapp-web.js';
 const { MessageMedia } = whatsapp;
 
-import { saveClientMenu } from '../services/clientsService.js';
+import { saveClientMenu, saveClientBannedNumbers } from '../services/clientsService.js';
 import { changeUserData, getUserSession } from '../services/sessionsService.js';
 import { formatCellphoneNumber, hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from '../utils/toolkit.js';
 import { getKeywordHint } from './keywordHandler.js';
@@ -225,6 +225,7 @@ const handleMessage = async (message, clientName, clientData) => {
     // Si querés enviar un mensaje avisando, reemplazá por:
     // return message.reply("🚫 No estás autorizado para usar este servicio.");
   }
+
   // --------------------------------------
   // ⛔ PAUSAR EL BOT
   // --------------------------------------
@@ -264,23 +265,28 @@ const handleMessage = async (message, clientName, clientData) => {
     // ================================================
     if (text === "admin") {
 
-      const adminName = clientData.name || clientName;
+      const adminName = clientData.name;
 
       const editable =
         `Bienvenido Admin de *${adminName}* 🛠\n` +
         `Aquí tiene sus opciones disponibles para su edición:\n\n` +
 
         "1️⃣ *Cambiar bienvenida*\n" +
-        "   ➤ escribir: cambiar bienvenida a: TU_TEXTO\n\n" +
+        "   ➤ escribir: cambiar bienvenida a: *TU_TEXTO*\n\n" +
 
         "2️⃣ *Cambiar la respuesta de una opción*\n" +
-        "   ➤ escribir: cambiar respuesta de 'NOMBRE_OPCION' a: TU_TEXTO\n\n" +
+        "   ➤ escribir: cambiar respuesta de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
 
-        "3️⃣ *Cambiar el texto del hint (texto corto del menú)*\n" +
-        "   ➤ escribir: cambiar hint de 'NOMBRE_OPCION' a: TU_TEXTO\n\n" +
+        "3️⃣ *Cambiar el texto principal-opción del menú*\n" +
+        "   ➤ escribir: cambiar hint de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
 
-        "4️⃣ *Cambiar el texto principal de un submenú*\n" +
-        "   ➤ escribir: cambiar texto de 'NOMBRE_OPCION' a: TU_TEXTO\n\n";
+        "4️⃣ *Cambiar el texto principal respuesta de un submenú*\n" +
+        "   ➤ escribir: cambiar texto de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n"+
+
+        "5️⃣ *Administrar números bloqueados*\n" +
+        "   ➤ escribir: ver baneados\n" +
+        "   ➤ escribir: banear *TU_NUMERO*\n" +
+        "   ➤ escribir: desbanear *TU_NUMERO*\n\n";
 
       return message.reply(editable);
     }
@@ -370,6 +376,66 @@ const handleMessage = async (message, clientName, clientData) => {
       clientData.menu = menu; // actualizar en memoria
 
       return message.reply(`📝 El texto de '${optionName}' fue actualizado.`);
+    }
+
+    // ================================================
+    // 📌 VER NÚMEROS BLOQUEADOS
+    // ================================================
+    if (text === "ver baneados") {
+      const banned = clientData.bannedNumbers || [];
+
+      if (banned.length === 0) {
+      return message.reply("📭 No hay números bloqueados.");
+      }
+
+      return message.reply(
+        "🚫 *Números bloqueados actualmente:*\n\n" + 
+        banned.map(n => `• ${n}`).join("\n")
+      );
+    }
+
+    // ================================================
+    // 🚫 BANEAR NÚMERO
+    // ================================================
+    if (text.startsWith("banear")) {
+      const number = text.replace("banear", "").trim();
+
+      if (!number.match(/^\d+$/)) {
+        return message.reply("⚠ Debe ingresar solo números. Ejemplo: banear 549113334455");
+      }
+
+      const banned = clientData.bannedNumbers || [];
+
+      if (banned.includes(number)) {
+        return message.reply("⚠ Ese número ya está bloqueado.");
+      }
+
+      banned.push(number);
+      clientData.bannedNumbers = banned;
+
+      await saveClientBannedNumbers(clientName, banned);
+
+      return message.reply(`🚫 El número *${number}* fue bloqueado.`);
+    }
+
+    // ================================================
+    // ✔ DESBANEAR NÚMERO
+    // ================================================
+    if (text.startsWith("desbanear")) {
+      const number = text.replace("desbanear", "").trim();
+
+      const banned = clientData.bannedNumbers || [];
+
+      if (!banned.includes(number)) {
+        return message.reply("⚠ Ese número no está bloqueado.");
+      }
+
+      const updated = banned.filter(n => n !== number);
+      clientData.bannedNumbers = updated;
+
+      await saveClientBannedNumbers(clientName, updated);
+
+      return message.reply(`✅ El número *${number}* fue desbloqueado.`);
     }
   }
 
