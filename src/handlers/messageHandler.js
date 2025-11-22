@@ -1,7 +1,7 @@
 import whatsapp from 'whatsapp-web.js';
 const { MessageMedia } = whatsapp;
 
-import { saveClientMenu, saveClientBannedNumbers } from '../services/clientsService.js';
+import { handleAdminMenu } from "./adminMenuHandler.js";
 import { changeUserData, getUserSession } from '../services/sessionsService.js';
 import { formatCellphoneNumber, hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from '../utils/toolkit.js';
 import { getKeywordHint } from './keywordHandler.js';
@@ -212,7 +212,7 @@ const getDynamicResponse = async (clientName, message, session, client) => {
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
   const text = message.body.toLowerCase().trim();
-  
+
   // --------------------------------------
   // 🚫 BLOQUEAR NÚMEROS BANEADOS
   // --------------------------------------
@@ -255,188 +255,10 @@ const handleMessage = async (message, clientName, clientData) => {
   // ==============================
   // ⚙️ ADMIN — EDICIÓN SIMPLE DEL MENÚ
   // ==============================
+ 
   if (isAdmin(clientData.admin, message.from)) {
-    const text = message.body.trim().toLowerCase();
-    const menu = clientData.menu;
-
-    // ================================================
-    // 📌 VER QUÉ COSAS PUEDE CAMBIAR EL ADMIN
-    // Comando: "ver opciones"
-    // ================================================
-    if (text === "admin") {
-
-      const adminName = clientData.name;
-
-      const editable =
-        `Bienvenido Admin de *${adminName}* 🛠\n` +
-        `Aquí tiene sus opciones disponibles para su edición:\n\n` +
-
-        "1️⃣ *Cambiar bienvenida*\n" +
-        "   ➤ escribir: cambiar bienvenida a: *TU_TEXTO*\n\n" +
-
-        "2️⃣ *Cambiar la respuesta de una opción*\n" +
-        "   ➤ escribir: cambiar respuesta de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
-
-        "3️⃣ *Cambiar el texto principal-opción del menú*\n" +
-        "   ➤ escribir: cambiar hint de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
-
-        "4️⃣ *Cambiar el texto principal respuesta de un submenú*\n" +
-        "   ➤ escribir: cambiar texto de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n"+
-
-        "5️⃣ *Administrar números bloqueados*\n" +
-        "   ➤ escribir: ver baneados\n" +
-        "   ➤ escribir: banear *TU_NUMERO*\n" +
-        "   ➤ escribir: desbanear *TU_NUMERO*\n\n";
-
-      return message.reply(editable);
-    }
-
-    // ======================================================
-    // 1. CAMBIAR BIENVENIDA
-    // ======================================================
-    if (text.startsWith("cambiar bienvenida a:")) {
-      const newWelcome = message.body.split(":")[1].trim();
-
-      menu.welcome = newWelcome;
-
-      await saveClientMenu(clientName, menu);
-      clientData.menu = menu; // actualizar en memoria
-
-      return message.reply("✅ La bienvenida fue actualizada.");
-    }
-
-    // ======================================================
-    // 2. CAMBIAR RESPUESTA DE UNA OPCIÓN
-    // Ejemplo: cambiar respuesta de 'ayuda' a: nuevo texto
-    // ======================================================
-    if (text.startsWith("cambiar respuesta de")) {
-      const optionName = text.split("cambiar respuesta de")[1]
-        .split("a:")[0]
-        .trim()
-        .replace(/'/g, "")
-        .replace(/"/g, "");
-
-      const newResponse = message.body.split("a:")[1].trim();
-
-      if (!menu.options[optionName]) {
-        return message.reply(`⚠ La opción '${optionName}' no existe.`);
-      }
-
-      menu.options[optionName].response = newResponse;
-
-      await saveClientMenu(clientName, menu);
-      clientData.menu = menu; // actualizar en memoria
-
-      return message.reply(`✅ La respuesta de '${optionName}' fue actualizada.`);
-    }
-
-    // ======================================================
-    // 3. CAMBIAR HINT DE UNA OPCIÓN
-    // ======================================================
-    if (text.startsWith("cambiar hint de")) {
-      const optionName = text.split("cambiar hint de")[1]
-        .split("a:")[0]
-        .trim()
-        .replace(/'/g, "")
-        .replace(/"/g, "");
-
-      const newHint = message.body.split("a:")[1].trim();
-
-      if (!menu.options[optionName]) {
-        return message.reply(`⚠ La opción '${optionName}' no existe.`);
-      }
-
-      menu.options[optionName].hint = newHint;
-
-      await saveClientMenu(clientName, menu);
-      clientData.menu = menu; // actualizar en memoria
-
-      return message.reply(`✅ El hint de '${optionName}' fue actualizado.`);
-    }
-
-    // ======================================================
-    // 4. CAMBIAR TEXTO DE SUBMENÚ (response)
-    // ======================================================
-    if (text.startsWith("cambiar texto de")) {
-      const optionName = text.split("cambiar texto de")[1]
-        .split("a:")[0]
-        .trim()
-        .replace(/'/g, "")
-        .replace(/"/g, "");
-
-      const newText = message.body.split("a:")[1].trim();
-
-      if (!menu.options[optionName]) {
-        return message.reply(`⚠ La opción '${optionName}' no existe.`);
-      }
-
-      menu.options[optionName].response = newText;
-
-      await saveClientMenu(clientName, menu);
-      clientData.menu = menu; // actualizar en memoria
-
-      return message.reply(`📝 El texto de '${optionName}' fue actualizado.`);
-    }
-
-    // ================================================
-    // 📌 VER NÚMEROS BLOQUEADOS
-    // ================================================
-    if (text === "ver baneados") {
-      const banned = clientData.bannedNumbers || [];
-
-      if (banned.length === 0) {
-      return message.reply("📭 No hay números bloqueados.");
-      }
-
-      return message.reply(
-        "🚫 *Números bloqueados actualmente:*\n\n" + 
-        banned.map(n => `• ${n}`).join("\n")
-      );
-    }
-
-    // ================================================
-    // 🚫 BANEAR NÚMERO
-    // ================================================
-    if (text.startsWith("banear")) {
-      const number = text.replace("banear", "").trim();
-
-      if (!number.match(/^\d+$/)) {
-        return message.reply("⚠ Debe ingresar solo números. Ejemplo: banear 549113334455");
-      }
-
-      const banned = clientData.bannedNumbers || [];
-
-      if (banned.includes(number)) {
-        return message.reply("⚠ Ese número ya está bloqueado.");
-      }
-
-      banned.push(number);
-      clientData.bannedNumbers = banned;
-
-      await saveClientBannedNumbers(clientName, banned);
-
-      return message.reply(`🚫 El número *${number}* fue bloqueado.`);
-    }
-
-    // ================================================
-    // ✔ DESBANEAR NÚMERO
-    // ================================================
-    if (text.startsWith("desbanear")) {
-      const number = text.replace("desbanear", "").trim();
-
-      const banned = clientData.bannedNumbers || [];
-
-      if (!banned.includes(number)) {
-        return message.reply("⚠ Ese número no está bloqueado.");
-      }
-
-      const updated = banned.filter(n => n !== number);
-      clientData.bannedNumbers = updated;
-
-      await saveClientBannedNumbers(clientName, updated);
-
-      return message.reply(`✅ El número *${number}* fue desbloqueado.`);
-    }
+    const adminReply = await handleAdminMenu(message, clientName, clientData);
+    if (adminReply) return adminReply;
   }
 
   const reply = await getDynamicResponse(clientName, message, session, clientData);
