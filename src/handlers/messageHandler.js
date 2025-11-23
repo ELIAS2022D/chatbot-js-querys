@@ -1,6 +1,7 @@
 import whatsapp from 'whatsapp-web.js';
 const { MessageMedia } = whatsapp;
 
+import { incrementStats } from "../services/statsService.js";
 import { handleAdminMenu } from "./adminMenuHandler.js";
 import { changeUserData, getUserSession } from '../services/sessionsService.js';
 import { formatCellphoneNumber, hasBeenLongEnough, isAnOldMessage, waitingConfirmation } from '../utils/toolkit.js';
@@ -211,7 +212,10 @@ const getDynamicResponse = async (clientName, message, session, client) => {
 
 const handleMessage = async (message, clientName, clientData) => {
   const session = await getUserSession(clientName, message);
+  await incrementStats(clientName, message, clientData);
   const text = message.body.toLowerCase().trim();
+
+
 
   // --------------------------------------
   // 🚫 BLOQUEAR NÚMEROS BANEADOS

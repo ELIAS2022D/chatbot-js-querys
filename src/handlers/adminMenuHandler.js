@@ -1,5 +1,5 @@
 import { saveClientMenu, saveClientBannedNumbers } from "../services/clientsService.js";
-
+import { getStats } from "../services/statsService.js";
 
 export const handleAdminMenu = async (message, clientName, clientData) => {
   const text = message.body.trim().toLowerCase();
@@ -13,22 +13,28 @@ export const handleAdminMenu = async (message, clientName, clientData) => {
       `Bienvenido Admin de *${adminName}* 🛠\n` +
       `Aquí tiene sus opciones disponibles para su edición:\n\n` +
 
-      "1️⃣ *Cambiar bienvenida*\n" +
+      "1️⃣ *Cambiar bienvenida*\n\n" +
       "   ➤ escribir: cambiar bienvenida a: *TU_TEXTO*\n\n" +
 
-      "2️⃣ *Cambiar la respuesta de una opción*\n" +
+      "2️⃣ *Cambiar la respuesta de una opción*\n\n" +
       "   ➤ escribir: cambiar respuesta de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
 
-      "3️⃣ *Cambiar texto principal del menú de una opción*\n" +
+      "3️⃣ *Cambiar texto principal del menú de una opción*\n\n" +
       "   ➤ escribir: cambiar hint de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
 
-      "4️⃣ *Cambiar respuesta de submenú*\n" +
+      "4️⃣ *Cambiar respuesta de submenú*\n\n" +
       "   ➤ escribir: cambiar texto de 'NOMBRE_OPCION' a: *TU_TEXTO*\n\n" +
 
-      "5️⃣ *Administrar números bloqueados*\n" +
+      "5️⃣ *Administrar números bloqueados*\n\n" +
       "   ➤ ver baneados\n" +
       "   ➤ banear *TU_NUMERO*\n" +
-      "   ➤ desbanear *TU_NUMERO*\n";
+      "   ➤ desbanear *TU_NUMERO*\n\n" +
+      
+      "6️⃣ *Estadísticas* 📊\n\n" +
+      "   ➤ Escribir: *estadísticas*\n\n"+
+
+      "7️⃣ *Para recibir soporte* ⚙️\n\n" +
+      "   ➤ Escribir: *soporte*\n";
 
     return message.reply(editable);
   }
@@ -159,6 +165,32 @@ export const handleAdminMenu = async (message, clientName, clientData) => {
     await saveClientBannedNumbers(clientName, updated);
 
     return message.reply(`✅ El número *${number}* fue desbloqueado.`);
+  }
+
+  // === 8. VER ESTADÍSTICAS DEL BOT ===
+  if (text === "estadísticas" || text === "estadisticas") {
+    const stats = await getStats(clientName, clientData);
+
+    let usageText = "Ninguna opción fue usada todavía.";
+    if (Object.keys(stats.usage).length > 0) {
+      usageText = Object.entries(stats.usage)
+        .map(([opt, count]) => `• ${opt}: ${count} veces`)
+        .join("\n");
+    } 
+
+    return message.reply(
+      `📊 *ESTADÍSTICAS DEL BOT*\n\n` +
+      `👥 Usuarios únicos: *${stats.uniqueUsers}*\n` +
+      `💬 Mensajes totales: *${stats.totalMessages}*\n` +
+      `📅 Mensajes hoy: *${stats.todayMessages}*\n` +
+      `⛔ Números bloqueados: *${stats.bannedCount}*\n\n` +
+      `🧭 *Uso de opciones:*\n${usageText}`
+    );
+  }
+
+  // === 8. VER ESTADÍSTICAS DEL BOT ===
+  if (text === "soporte") {
+    return message.reply("👨‍💻Un agente resolverá tu consulta... Aguarde👨‍💻");
   }
 
   // Si no coincide con ningún comando admin
