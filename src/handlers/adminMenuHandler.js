@@ -190,7 +190,7 @@ export const handleAdminMenu = async (message, clientName, clientData) => {
 
   // === 8. VER ESTADÍSTICAS DEL BOT ===
   if (text === "soporte") {
-    return message.reply("👨‍💻Un agente resolverá tu consulta... Aguarde👨‍💻");
+    return message.reply("👨‍💻 Tu consulta está siendo derivada a un asesor. Te responderemos a la brevedad.");
   }
 
   // Si no coincide con ningún comando admin
