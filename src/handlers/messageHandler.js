@@ -215,7 +215,20 @@ const handleMessage = async (message, clientName, clientData) => {
   await incrementStats(clientName, message, clientData);
   const text = message.body.toLowerCase().trim();
 
+  // --------------------------------------
+  // 👤 USUARIO NUEVO → ENVIAR WELCOME
+  // --------------------------------------
+  if (!session.hasInteracted) {
 
+    // Guardar que ya interactuó
+    await changeUserData(clientName, message.from, "hasInteracted", true);
+
+    // Enviar bienvenida del JSON
+    const welcome = clientData.menu.welcome || "👋 Bienvenido/a!";
+    const menuOptions = showOptions(clientData.menu.options);
+
+    return message.reply(`${welcome}\n\n${menuOptions}`);
+  }
 
   // --------------------------------------
   // 🚫 BLOQUEAR NÚMEROS BANEADOS
@@ -256,10 +269,6 @@ const handleMessage = async (message, clientName, clientData) => {
   // --------------------------------------
   if (isAnOldMessage(message)) return;
 
-  // ==============================
-  // ⚙️ ADMIN — EDICIÓN SIMPLE DEL MENÚ
-  // ==============================
- 
   if (isAdmin(clientData.admin, message.from)) {
     const adminReply = await handleAdminMenu(message, clientName, clientData);
     if (adminReply) return adminReply;
