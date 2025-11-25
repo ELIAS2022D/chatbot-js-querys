@@ -119,7 +119,7 @@ const getNestedValue = (obj, pathString) => {
 const getDynamicResponse = async (clientName, message, session, client) => {
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     await changeUserData(clientName, message.from, 'botPaused', false);
-    return `🤝 Bienvenido/a de nuevo a nuestro sistema 🌐\n\n⬇️ Elija una opción del menú principal ⬇️\n\n🤖 Para regresar al menú ingrese *volver*\n\n${showOptions(client.menu.options)}`;
+    return `🤝 Bienvenido/a de nuevo a nuestro sistema 🌐\n\n⬇️ Elija una opción del *menú principal* ⬇️\n\n🤖 Para regresar al menú ingrese *volver*\n\n${showOptions(client.menu.options)}`;
   }
 
   const normalizedText = message.body.toLowerCase().trim();
@@ -248,7 +248,7 @@ const handleMessage = async (message, clientName, clientData) => {
   // --------------------------------------
   if (text === "pausar") {
     await changeUserData(clientName, message.from, "botPaused", true);
-    return message.reply("🤖 Bot pausado. Ahora pueden chatear libremente.");
+    return message.reply("🤖 El bot fue pausado. Ahora puede subir sus datos y hablar libremente con su asesor.");
   }
 
   // --------------------------------------

@@ -10,7 +10,7 @@ async function checkPause(message) {
         await redis.set("botPaused", "true");
         return {
             stop: true,
-            reply: "🤖 El bot fue PAUSADO. Ahora pueden hablar libremente."
+            reply: ""
         };
     }
 
@@ -19,7 +19,7 @@ async function checkPause(message) {
         await redis.set("botPaused", "false");
         return {
             stop: true,
-            reply: "⚡ El bot fue REACTIVADO y ya está respondiendo normalmente."
+            reply: ""
         };
     }
 
