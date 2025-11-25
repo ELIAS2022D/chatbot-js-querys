@@ -119,7 +119,7 @@ const getNestedValue = (obj, pathString) => {
 const getDynamicResponse = async (clientName, message, session, client) => {
   if (hasBeenLongEnough(session.lastMessage, 0.05)) {
     await changeUserData(clientName, message.from, 'botPaused', false);
-    return `👋Bienvenido/a de nuevo. Elija una opción del menú principal.\n\n🤖 Para regresar al menú ingrese *volver*\n\n🤖 Escriba *pausar* o *reactivar* el bot y chatear libremente con un asesor.\n\n${showOptions(client.menu.options)}`;
+    return `🤝 Bienvenido/a de nuevo\n🌐 Elija una opción del menú principal.\n\n🤖 Para regresar al menú ingrese *volver*\n\n🤖 Escriba *pausar* o *reactivar* el bot y chatear libremente con un asesor.\n\n${showOptions(client.menu.options)}`;
   }
 
   const normalizedText = message.body.toLowerCase().trim();
